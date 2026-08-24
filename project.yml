@@ -1,0 +1,64 @@
+name: Suar
+options:
+  bundleIdPrefix: com.dimasdaffa
+  deploymentTarget:
+    iOS: "17.0"
+  generateEmptyDirectories: true
+
+packages:
+  Pulse:
+    url: https://github.com/kean/Pulse
+    from: 5.0.0
+  ViewInspector:
+    url: https://github.com/nalexn/ViewInspector
+    from: 0.10.0
+
+targets:
+  Suar:
+    type: application
+    platform: iOS
+    sources:
+      - path: Suar/Suar
+    info:
+      path: Suar/Suar/Info.plist
+      properties:
+        CFBundleDisplayName: Suar
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    configFiles:
+      Debug: Suar/Suar/SupportingFiles/Config/ConfigExample.xcconfig
+      Release: Suar/Suar/SupportingFiles/Config/ConfigExample.xcconfig
+    dependencies:
+      - package: Pulse
+        product: Pulse
+      - package: Pulse
+        product: PulseUI
+    preBuildScripts:
+      - name: SwiftLint
+        script: |
+          if which swiftlint >/dev/null; then
+            swiftlint
+          else
+            echo "warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint"
+          fi
+        basedOnDependencyAnalysis: false
+
+  SuarTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Suar/SuarTests
+    info:
+      path: Suar/SuarTests/Info.plist
+      properties:
+        CFBundleIdentifier: $(PRODUCT_BUNDLE_IDENTIFIER)
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "1"
+    dependencies:
+      - target: Suar
+      - package: ViewInspector
+        product: ViewInspector

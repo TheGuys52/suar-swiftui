@@ -1,0 +1,26 @@
+# lefthook.yml
+
+commit-msg:
+  jobs:
+    - script: "validate.sh"
+      runner: sh
+
+pre-commit:
+  parallel: true
+  commands:
+    swiftlint:
+      tags: style
+      glob: "*.swift"
+      run: swiftlint --fix {staged_files} && git add {staged_files}
+
+post-merge:
+  commands:
+    xcodegen:
+      tags: project
+      run: xcodegen generate
+
+post-checkout:
+  commands:
+    xcodegen:
+      tags: project
+      run: xcodegen generate

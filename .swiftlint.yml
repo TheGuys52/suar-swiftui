@@ -1,0 +1,38 @@
+# .swiftlint.yml
+
+disabled_rules:
+  - trailing_whitespace
+  - todo
+
+opt_in_rules:
+  - empty_count
+  - force_unwrapping
+  - sorted_imports
+  - fatal_error_message
+
+included:
+  - Suar
+
+excluded:
+  - .build
+  - DerivedData
+  - SuarTests
+
+line_length:
+  warning: 120
+  error: 150
+
+type_body_length:
+  warning: 300
+  error: 500
+
+file_length:
+  warning: 400
+  error: 800
+
+custom_rules:
+  no_print_statement:
+    name: "Print Statement"
+    regex: "\\bprint\\("
+    message: "Gunakan PulseLogger atau OSLog alih-alih print() langsung."
+    severity: warning
