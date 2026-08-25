@@ -6,3 +6,10 @@
 //
 
 import Foundation
+
+public enum ScriptBlockType: String, Codable, CaseIterable, Sendable {
+    case sceneHeader
+    case characterName
+    case dialogue
+    case stageDirection
+}
