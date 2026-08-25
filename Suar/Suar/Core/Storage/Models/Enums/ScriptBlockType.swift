@@ -13,3 +13,6 @@ public enum ScriptBlockType: String, Codable, CaseIterable, Sendable {
     case dialogue
     case stageDirection
 }
+
+// TODO: [@Team-All] Tambahkan case baru di sini jika ke depan ada tipe blok baru
+// seperti parenthetical, transition, atau note tambahan.
