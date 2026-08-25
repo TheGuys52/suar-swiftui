@@ -9,20 +9,12 @@ import Foundation
 
 public enum AppRoute: Hashable, Identifiable {
     case home
-    case library
-    case ingestion
-    case reader(scriptId: UUID)
+    // TODO: [@Team-Nav] Daftarkan rute navigasi fitur lainnya (library, ingestion, reader(scriptId: UUID))
     
     public var id: String {
         switch self {
         case .home:
             return "home"
-        case .library:
-            return "library"
-        case .ingestion:
-            return "ingestion"
-        case .reader(let scriptId):
-            return "reader_\(scriptId.uuidString)"
         }
     }
 }
