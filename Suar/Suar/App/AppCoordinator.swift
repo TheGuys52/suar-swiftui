@@ -18,9 +18,15 @@ public final class AppCoordinator: CoordinatorProtocol {
     
     @ViewBuilder
     public func start() -> some View {
-        // TODO: [@Team-Nav] Setup NavigationStack(path:) menggunakan router.path[cite: 2]
-        // TODO: [@Team-Nav] Tambahkan modifier .navigationDestination(for: AppRoute.self) dan modal sheet[cite: 2]
-        // TODO: [@Team-UI] Hubungkan ke root view awal (HomeView)[cite: 1]
-        Text("Suar Root Screen")
+        @Bindable var router = router
+        NavigationStack(path: $router.path) {
+            HomeView()
+                .navigationDestination(for: AppRoute.self) { route in
+                    switch route {
+                    case .home:
+                        HomeView()
+                    }
+                }
+        }
     }
 }
