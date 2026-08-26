@@ -12,8 +12,21 @@ struct ContinueReadingSection: View {
         VStack {
             Text("Continue Reading")
                 .bold()
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .font(.title3)
+                .frame(maxWidth: .infinity, alignment: .leading )
+                .padding(.horizontal)
+
+            ScrollView(.horizontal) {
+                HStack {
+                    ReadingCard()
+                }
+                .padding(.vertical, 6)
+                .padding(.horizontal)
+            }
+            .scrollIndicators(.hidden)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+
     }
 }
 
