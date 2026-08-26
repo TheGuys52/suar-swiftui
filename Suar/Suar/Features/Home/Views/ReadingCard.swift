@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ReadingCard: View {
     @State private var progress = 0.5
-
+    
     var body: some View {
         VStack {
             HStack {
@@ -19,9 +19,12 @@ struct ReadingCard: View {
                     .padding(8)
                     .background(Color.themeRed)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
+                
                 Text("Lorem Ipsum dolor sit")
                     .font(.title)
                     .bold()
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             ProgressView(value: progress)
