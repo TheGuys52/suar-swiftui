@@ -17,7 +17,7 @@ struct ReadingCard: View {
                     .font(.title)
                     .foregroundStyle(.white)
                     .padding(8)
-                    .background(.red)
+                    .background(Color.themeRed)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 Text("Lorem Ipsum dolor sit")
                     .font(.title)
@@ -25,7 +25,7 @@ struct ReadingCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             ProgressView(value: progress)
-                .tint(.red)
+                .tint(Color.themeRed)
             HStack {
                 Text("Bab 11 dari 100")
                     .font(.caption)
@@ -38,7 +38,7 @@ struct ReadingCard: View {
         .padding()
         .overlay {
             RoundedRectangle(cornerRadius: 16)
-                .stroke(.red, lineWidth: 2)
+                .stroke(Color.themeRed, lineWidth: 2)
         }
         .frame(maxWidth: 300)
     }
