@@ -10,6 +10,7 @@ import SwiftUI
 @MainActor
 @Observable
 public final class AppCoordinator: CoordinatorProtocol {
+
     public var router: Router
     
     public init(router: Router = Router()) {
