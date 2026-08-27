@@ -12,7 +12,8 @@ extension Color {
     // MARK: - Brand & Accent Colors
     static let themePrimary     = Color(hex: 0xF2EFE7) // Pantone Coconut Milk
     static let themeMaple       = Color(hex: 0xC36316) // Pantone Autumn Maple
-
+    static let themeRed         = Color(hex: 0x831100) // Warna merah baru
+    
     // MARK: - Backgrounds & Shadows
     static let themeShadow      = Color(hex: 0x1C1F2A) // Pantone 532 C
     static let themeHardShadow  = Color(hex: 0x24221D)

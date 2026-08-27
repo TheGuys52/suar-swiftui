@@ -5,18 +5,34 @@
 //  Created by DIMAS DAFFA ERNANDA on 24/08/26.
 //
 
+import Observation
 import SwiftUI
 
 @Observable
 public final class Router {
-    public var path: NavigationPath = NavigationPath()
+    public var path = NavigationPath()
     public var presentedSheet: AppRoute?
-    // TODO: [@Team-Nav] Tambahkan state modal presentation lainnya jika dibutuhkan
     
     public init() {}
     
-    // TODO: [@Team-Nav] Implementasikan method helper navigasi:
-    // - push(_ route: AppRoute)
-    // - pop() / popToRoot()
-    // - presentSheet(_ route: AppRoute) / dismissSheet()
+    public func push(_ route: AppRoute) {
+        path.append(route)
+    }
+    
+    public func pop() {
+        guard !path.isEmpty else { return }
+        path.removeLast()
+    }
+    
+    public func popToRoot() {
+        path = NavigationPath()
+    }
+    
+    public func presentSheet(_ route: AppRoute) {
+        presentedSheet = route
+    }
+    
+    public func dismissSheet() {
+        presentedSheet = nil
+    }
 }
