@@ -15,6 +15,7 @@ struct AllScriptsSection: View {
                     .bold()
                     .font(.title3)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    //
                 
                 Spacer()
                 Menu {
