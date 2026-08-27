@@ -15,7 +15,7 @@ public final class VisionOCRService: VisionOCRServiceProtocol {
     
     public func extractText(
         from url: URL,
-        onProgress: ((Double) -> Void)? = nil
+        onProgress: (@Sendable (Double) -> Void)? = nil
     ) async throws -> [Int: String] {
         // Deteksi jenis file (PDF atau Gambar)
         let pathExtension = url.pathExtension.lowercased()

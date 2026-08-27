@@ -13,10 +13,9 @@ public final class DIContainer {
     public static let shared: DIContainer = DIContainer()
     
     // MARK: - Core Services & Repositories
-    // TODO: [@Team-All] Ganti placeholder nil dengan implementasi konkrit setelah Service/Repo selesai dibuat[cite: 2]
     public var scriptRepository: ScriptRepositoryProtocol?
-    public var ocrService: VisionOCRServiceProtocol?
-    public var parserService: ScriptParserServiceProtocol?
+    public lazy var ocrService: VisionOCRServiceProtocol = VisionOCRService()
+    public lazy var parserService: ScriptParserServiceProtocol = ScriptParserService()
     
     private init() {}
     
