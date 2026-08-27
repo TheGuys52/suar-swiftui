@@ -9,15 +9,17 @@ import Foundation
 
 public enum AppRoute: Hashable, Identifiable {
     case home
-    // TODO: [@Team-Nav] Daftarkan rute navigasi fitur lainnya (library, ingestion, reader(scriptId: UUID))
+    case library
+    case reader(scriptId: UUID)
     
     public var id: String {
         switch self {
         case .home:
             return "home"
+        case .library:
+            return "library"
+        case .reader(let scriptId):
+            return "reader-\(scriptId.uuidString)"
         }
     }
 }
-
-// TODO: [@Team-All] Tambahkan case rute baru di enum ini saat membuat fitur baru[cite: 2].
-// Pastikan parameter yang dikirim conform ke protocol `Hashable`[cite: 2].

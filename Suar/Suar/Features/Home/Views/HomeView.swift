@@ -1,16 +1,11 @@
-//
-//  ContentView.swift (atau HomeView.swift)
-//  Suar
-//
-//  Created by DIMAS DAFFA ERNANDA on 24/08/26.
-//
-
+import Observation
 import SwiftUI
-import UniformTypeIdentifiers // 👈 Wajib ditambahkan untuk menentukan jenis file
+import UniformTypeIdentifiers
 
 struct HomeView: View {
+    @Bindable var viewModel: HomeViewModel
+    @Binding var isShowingFileImporter: Bool
     @State private var searchText = ""
-    @State private var showFilePicker = false // 👈 State untuk memunculkan file picker
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -22,14 +17,14 @@ struct HomeView: View {
                             .bold()
                         Spacer()
                         Button {
-                            print("Help button tapped")
+                            viewModel.didTapLibrary()
                         } label: {
                             Image(systemName: "questionmark")
                                 .foregroundStyle(.white)
                                 .bold()
                         }
                         .padding()
-                        .background(Color.themeRed) // Pastikan Color.themeRed sudah ada di ext Color
+                        .background(Color.themeRed)
                         .clipShape(Circle())
                         .shadow(radius: 12)
                     }
@@ -47,7 +42,6 @@ struct HomeView: View {
             }
             .scrollIndicators(.hidden)
             
-            // MARK: - Floating Bottom Bar
             HStack(spacing: 16) {
                 HStack {
                     Image(systemName: "magnifyingglass")
@@ -61,7 +55,7 @@ struct HomeView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 30))
                 
                 Button {
-                    showFilePicker = true // 👈 Ubah action tombol plus di sini
+                    viewModel.didTapImport()
                 } label: {
                     Image(systemName: "plus")
                         .font(.title2)
@@ -78,35 +72,25 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea(.keyboard)
-        
-        // MARK: - File Importer Modifier
         .fileImporter(
-            isPresented: $showFilePicker,
-            allowedContentTypes: [.item], // 👈 Mengizinkan semua jenis file (.item). Ubah ke [.pdf] jika hanya ingin PDF
+            isPresented: $isShowingFileImporter,
+            allowedContentTypes: [.pdf, .image],
             allowsMultipleSelection: false
         ) { result in
             switch result {
             case .success(let urls):
-                guard let selectedFileURL = urls.first else { return }
-                
-                // Minta izin sistem untuk mengakses file dari luar aplikasi (misal: iCloud / Downloads)
-                let gotAccess = selectedFileURL.startAccessingSecurityScopedResource()
-                defer {
-                    if gotAccess {
-                        selectedFileURL.stopAccessingSecurityScopedResource()
-                    }
-                }
-                
-                print("Berhasil memilih file: \(selectedFileURL.lastPathComponent)")
-                // Lakukan sesuatu dengan URL file tersebut di sini...
-                
+                guard let url = urls.first else { return }
+                viewModel.handleSelectedFile(result: .success(url))
             case .failure(let error):
-                print("Gagal memilih file: \(error.localizedDescription)")
+                viewModel.handleSelectedFile(result: .failure(error))
             }
         }
     }
 }
 
 #Preview {
-    HomeView()
+    HomeView(
+        viewModel: HomeViewModel(),
+        isShowingFileImporter: .constant(false)
+    )
 }

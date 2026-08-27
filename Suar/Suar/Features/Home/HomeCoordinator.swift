@@ -1,38 +1,40 @@
-////
-////  HomeCoordinator.swift
-////  Suar
-////
-////  Created by DIMAS DAFFA ERNANDA on 25/08/26.
-////
-//
-// import SwiftUI
-//
-// @MainActor
-// @Observable
-// public final class HomeCoordinator: CoordinatorProtocol {
-//    public var router: Router
-//    
-//    public init(router: Router) {
-//        self.router = router
-//    }
-//    
-//    @ViewBuilder
-//    public func start() -> some View {
-//        let viewModel = HomeViewModel()
-//        
-//        // Setup Navigation Callbacks ke Router
-//        viewModel.onSelectScript = { [weak self] _ in
-//            // TODO: [@Team-Nav] self?.router.push(.reader(scriptId: scriptId))[cite: 1, 2]
-//        }
-//        
-//        viewModel.onImportTapped = { [weak self] in
-//            // TODO: [@Team-Nav] self?.router.presentSheet(.ingestion)[cite: 1, 2]
-//        }
-//        
-//        viewModel.onLibraryTapped = { [weak self] in
-//            // TODO: [@Team-Nav] self?.router.push(.library)[cite: 1, 2]
-//        }
-//        
-//        HomeView(viewModel: viewModel)
-//    }
-// }
+import Observation
+import SwiftUI
+
+@MainActor
+@Observable
+public final class HomeCoordinator: CoordinatorProtocol {
+    public var router: Router
+    public let viewModel: HomeViewModel
+    public var isPresentingImportPicker = false
+    
+    public init(router: Router) {
+        self.router = router
+        self.viewModel = HomeViewModel()
+        configureBindings()
+    }
+    
+    @ViewBuilder
+    public func start() -> some View {
+        @Bindable var router = router
+        @Bindable var coordinator = self
+        HomeView(
+            viewModel: viewModel,
+            isShowingFileImporter: $coordinator.isPresentingImportPicker
+        )
+    }
+    
+    private func configureBindings() {
+        viewModel.onImportTapped = { [weak self] in
+            self?.isPresentingImportPicker = true
+        }
+        
+        viewModel.onSelectScript = { [weak self] scriptId in
+            self?.router.push(.reader(scriptId: scriptId))
+        }
+        
+        viewModel.onLibraryTapped = { [weak self] in
+            self?.router.push(.library)
+        }
+    }
+}
