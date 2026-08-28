@@ -102,24 +102,13 @@ public final class HomeViewModel {
                 argument: "\(pageCount) halaman naskah berhasil dipindai, memproses format..."
             )
             
-            // TODO: Parser + Repository (Issue #2 + Storage)
+            // Parser Service
             
             let script = try await parserService.parseScript(
                 rawPagesText: rawPagesText,
                 scriptTitle: url.deletingPathExtension().lastPathComponent,
                 sourceFileName: url.lastPathComponent
             )
-            
-            // Debug: print hasil parsing
-            print("✅ Parsing Berhasil!")
-            print("Judul: \(script.title)")
-            print("Jumlah halaman: \(script.pages.count)")
-            for page in script.pages {
-                print("  Halaman \(page.pageNumber): \(page.blocks.count) blocks")
-                for block in page.blocks.sorted(by: { $0.orderIndex < $1.orderIndex }) {
-                    print("    [\(block.blockType)] \(block.content.prefix(50))")
-                }
-            }
             
             // Simpan kalau repository sudah ada
             if let repository {
