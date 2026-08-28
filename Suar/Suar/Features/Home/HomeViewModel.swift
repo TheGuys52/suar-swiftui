@@ -78,13 +78,13 @@ public final class HomeViewModel {
             if let cocoaError = error as? CocoaError, cocoaError.code == .userCancelled {
                 return
             }
-
+            
             errorMessage = error.localizedDescription
         }
     }
     
     private func parseAndSave(url: URL) async {
-        guard let ocrService, let parserService, let repository else {
+        guard let ocrService, let parserService else {
             errorMessage = "Layanan impor belum dikonfigurasi."
             return
         }
@@ -103,14 +103,30 @@ public final class HomeViewModel {
             )
             
             // TODO: Parser + Repository (Issue #2 + Storage)
-//            print("Parser & Repository belum diimplementasi - test OCR selesai")
             
             let script = try await parserService.parseScript(
                 rawPagesText: rawPagesText,
                 scriptTitle: url.deletingPathExtension().lastPathComponent,
                 sourceFileName: url.lastPathComponent
             )
-            try await repository.save(script: script)
+            
+            // Debug: print hasil parsing
+            print("✅ Parsing Berhasil!")
+            print("Judul: \(script.title)")
+            print("Jumlah halaman: \(script.pages.count)")
+            for page in script.pages {
+                print("  Halaman \(page.pageNumber): \(page.blocks.count) blocks")
+                for block in page.blocks.sorted(by: { $0.orderIndex < $1.orderIndex }) {
+                    print("    [\(block.blockType)] \(block.content.prefix(50))")
+                }
+            }
+            
+            // Simpan kalau repository sudah ada
+            if let repository {
+                try await repository.save(script: script)
+            } else {
+                print("Repository belum diimplementasi - skip save")
+            }
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
