@@ -30,6 +30,7 @@ struct SuarApp: App {
     
     init() {
         // TODO: [@Team-All] Panggil DIContainer.shared.configure(modelContext:) menggunakan sharedModelContainer.mainContext[cite: 2]
+        DIContainer.shared.configure(modelContext: sharedModelContainer.mainContext)
     }
     
     var body: some Scene {

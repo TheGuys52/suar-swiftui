@@ -15,7 +15,7 @@ public final class DIContainer {
     // MARK: - Core Services & Repositories
     // TODO: [@Team-All] Ganti placeholder nil dengan implementasi konkrit setelah Service/Repo selesai dibuat[cite: 2]
     public var scriptRepository: ScriptRepositoryProtocol?
-    public var ocrService: VisionOCRServiceProtocol?
+    public var ocrService: VisionOCRServiceProtocol? = VisionOCRService()
     public var parserService: ScriptParserServiceProtocol?
     
     private init() {}

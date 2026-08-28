@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit // Buat Tes OCR
 
 @MainActor
 @Observable
@@ -83,16 +84,36 @@ public final class HomeViewModel {
     }
     
     private func parseAndSave(url: URL) async {
+        print("Test: parseAndSave dipanggil")
         guard let ocrService, let parserService, let repository else {
             errorMessage = "Layanan impor belum dikonfigurasi."
             return
         }
+        print("Guard Passed - Service tidak nil")
         
         isImporting = true
         defer { isImporting = false }
         
         do {
+            print("Sebelum extractText")
             let rawPagesText = try await ocrService.extractText(from: url, onProgress: nil)
+            print("extractText selesai, halaman: \(rawPagesText.count)")
+            // Proses OCR Info Voiceover
+            let pageCount = rawPagesText.count
+            UIAccessibility.post(
+                notification: .announcement,
+                argument: "\(pageCount) halaman naskah berhasil dipindai, memproses format..."
+            )
+            
+            // Test OCR Info Console
+            print("OCR Berhasil! : \(pageCount) halaman")
+            for (page, text) in rawPagesText.sorted(by: { $0.key < $1.key }) {
+                print("Halaman \(page): \(text.prefix(100))")
+            }
+            
+            // TODO: Parser + Repository (Issue #2 + Storage)
+//            print("Parser & Repository belum diimplementasi - test OCR selesai")
+            
             let script = try await parserService.parseScript(
                 rawPagesText: rawPagesText,
                 scriptTitle: url.deletingPathExtension().lastPathComponent,
