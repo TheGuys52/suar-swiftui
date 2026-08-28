@@ -19,20 +19,29 @@ struct HomeView: View {
                         Button {
                             viewModel.didTapLibrary()
                         } label: {
-                            Image(systemName: "questionmark")
-                                .foregroundStyle(.white)
-                                .bold()
+                            if #available(iOS 26.0, *) {
+                                Image(systemName: "questionmark")
+                                    .foregroundStyle(.white)
+                                    .bold()
+                                    .frame(width: 44, height: 44)
+                                    .glassEffect(
+                                        .regular
+                                            .tint(Color.themeRed)
+                                            .interactive()
+                                    )
+                            } else {
+                                Image(systemName: "questionmark")
+                                    .foregroundStyle(.white)
+                                    .bold()
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.themeRed)
+                            }
                         }
-                        .padding()
-                        .background(Color.themeRed)
                         .clipShape(Circle())
-                        .shadow(radius: 12)
                     }
                     .padding(.horizontal)
                     .padding(.top, 16)
-                    
                     ContinueReadingSection()
-                    
                     VStack(spacing: 16) {
                         AllScriptsSection()
                     }
@@ -41,7 +50,6 @@ struct HomeView: View {
                 }
             }
             .scrollIndicators(.hidden)
-            
             HStack(spacing: 16) {
                 HStack {
                     Image(systemName: "magnifyingglass")
@@ -51,20 +59,31 @@ struct HomeView: View {
                         .foregroundStyle(.gray)
                 }
                 .padding()
-                .background(.thinMaterial)
+                .background(.ultraThinMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 30))
-                
                 Button {
                     viewModel.didTapImport()
                 } label: {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .foregroundStyle(.white)
-                        .bold()
-                        .frame(width: 56, height: 56)
-                        .background(Color.themeRed)
-                        .clipShape(Circle())
-                        .shadow(radius: 12)
+                    if #available(iOS 26.0, *) {
+                        Image(systemName: "plus")
+                            .font(.title2)
+                            .foregroundStyle(.white)
+                            .bold()
+                            .frame(width: 56, height: 56)
+                            .glassEffect(
+                                .regular
+                                    .tint(Color.themeRed)
+                                    .interactive()
+                            )
+                    } else {
+                        Image(systemName: "plus")
+                            .font(.title2)
+                            .foregroundStyle(.white)
+                            .bold()
+                            .frame(width: 56, height: 56)
+                            .background(Color.themeRed)
+                            .clipShape(Circle())
+                    }
                 }
             }
             .padding(.horizontal)

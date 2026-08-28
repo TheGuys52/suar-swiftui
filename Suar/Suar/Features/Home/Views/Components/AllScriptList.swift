@@ -13,7 +13,7 @@ struct AllScriptList: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("August 2026")
                     .font(.headline)
-                    .foregroundStyle(Color.themeRed) // Memanggil warna custom-mu
+                    .foregroundStyle(Color.themeRed)
                 
                 VStack(alignment: .leading, spacing: 12) {
                     ScriptRowView(title: "Kimigami to Kurogami")
@@ -46,7 +46,7 @@ struct ScriptRowView: View {
                 .font(.body)
                 .foregroundStyle(.primary)
             
-            Divider() // Membuat garis tipis pembatas
+            Divider()
         }
     }
 }
