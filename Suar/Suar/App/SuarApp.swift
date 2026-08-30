@@ -28,13 +28,14 @@ struct SuarApp: App {
         }
     }()
     
-    init() {
-        // TODO: [@Team-All] Panggil DIContainer.shared.configure(modelContext:) menggunakan sharedModelContainer.mainContext[cite: 2]
-    }
-    
+    init() {}
+
     var body: some Scene {
         WindowGroup {
             coordinator.start()
+                .task {
+                    DIContainer.shared.configure(modelContext: sharedModelContainer.mainContext)
+                }
         }
         .modelContainer(sharedModelContainer)
     }
