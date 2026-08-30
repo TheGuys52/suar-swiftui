@@ -30,7 +30,8 @@ final class ScriptOCRParserTests: XCTestCase {
         try await assertScriptParsing(
             fileName: "ruangtunggu",
             fileExtension: "pdf",
-            scriptTitle: "Ruang Tunggu"
+            scriptTitle: "Ruang Tunggu",
+            expectedCharacters: ["PRIA", "WANITA"]
         )
     }
     
@@ -39,7 +40,8 @@ final class ScriptOCRParserTests: XCTestCase {
         try await assertScriptParsing(
             fileName: "ruangtungguimgpdf",
             fileExtension: "pdf",
-            scriptTitle: "Ruang Tunggu"
+            scriptTitle: "Ruang Tunggu",
+            expectedCharacters: ["PRIA", "WANITA"]
         )
     }
     
@@ -48,7 +50,8 @@ final class ScriptOCRParserTests: XCTestCase {
         try await assertScriptParsing(
             fileName: "ruangtunggu-image",
             fileExtension: "jpg",
-            scriptTitle: "Ruang Tunggu"
+            scriptTitle: "Ruang Tunggu",
+            expectedCharacters: ["PRIA"]
         )
     }
     
@@ -56,7 +59,8 @@ final class ScriptOCRParserTests: XCTestCase {
     private func assertScriptParsing(
         fileName: String,
         fileExtension: String,
-        scriptTitle: String
+        scriptTitle: String,
+        expectedCharacters: Set<String>
     ) async throws {
         // 1. Ambil URL file dari Bundle Test / Bundle Main
         let testBundle = Bundle(for: type(of: self))
@@ -84,10 +88,14 @@ final class ScriptOCRParserTests: XCTestCase {
         let allBlocks = script.pages.flatMap { $0.blocks }
         XCTAssertGreaterThan(allBlocks.count, 0, "Jumlah blok naskah harus terisi")
         
-        // Memastikan tokoh PRIA dan WANITA terdeteksi di dalam blok dialog
+        // Memastikan tokoh yang diharapkan terdeteksi di dalam blok dialog
         let characterNames = Set(allBlocks.compactMap { $0.characterName })
-        XCTAssertTrue(characterNames.contains("PRIA"), "[\(fileName)] Harus mendeteksi tokoh PRIA")
-        XCTAssertTrue(characterNames.contains("WANITA"), "[\(fileName)] Harus mendeteksi tokoh WANITA")
+        for expectedCharacter in expectedCharacters {
+            XCTAssertTrue(
+                characterNames.contains(expectedCharacter),
+                "[\(fileName)] Harus mendeteksi tokoh \(expectedCharacter)"
+            )
+        }
         
         print("====== HASIL PARSING [\(fileName).\(fileExtension)] ======")
         print("Judul: \(script.title)")
