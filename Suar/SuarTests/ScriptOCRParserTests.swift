@@ -25,26 +25,60 @@ final class ScriptOCRParserTests: XCTestCase {
         super.tearDown()
     }
     
-    func testParseRuangTungguPDF() async throws {
-        // 1. Dapatkan URL file pdf dari Bundle Utama
-        guard let pdfURL = Bundle.main.url(forResource: "ruangtunggu", withExtension: "pdf") else {
-            XCTFail("File ruangtunggu.pdf tidak ditemukan di Bundle.main")
+    // MARK: - Test Case 1: Digital PDF
+    func testParseDigitalPDF() async throws {
+        try await assertScriptParsing(
+            fileName: "ruangtunggu",
+            fileExtension: "pdf",
+            scriptTitle: "Ruang Tunggu"
+        )
+    }
+    
+    // MARK: - Test Case 2: Scanned/Image PDF
+    func testParseScannedImagePDF() async throws {
+        try await assertScriptParsing(
+            fileName: "ruangtungguimgpdf",
+            fileExtension: "pdf",
+            scriptTitle: "Ruang Tunggu"
+        )
+    }
+    
+    // MARK: - Test Case 3: Pure Image JPG
+    func testParsePureImage() async throws {
+        try await assertScriptParsing(
+            fileName: "ruangtunggu-image",
+            fileExtension: "jpg",
+            scriptTitle: "Ruang Tunggu"
+        )
+    }
+    
+    // MARK: - Reusable Helper Assertion Method
+    private func assertScriptParsing(
+        fileName: String,
+        fileExtension: String,
+        scriptTitle: String
+    ) async throws {
+        // 1. Ambil URL file dari Bundle Test / Bundle Main
+        let testBundle = Bundle(for: type(of: self))
+        guard let fileURL = testBundle.url(forResource: fileName, withExtension: fileExtension)
+                ?? Bundle.main.url(forResource: fileName, withExtension: fileExtension) else {
+            XCTFail("File \(fileName).\(fileExtension) tidak ditemukan di Bundle Test maupun Bundle.main")
             return
         }
         
         // 2. Eksekusi OCR
-        let rawPagesText = try await ocrService.extractText(from: pdfURL, onProgress: nil)
-        XCTAssertFalse(rawPagesText.isEmpty, "Hasil ekstraksi teks OCR tidak boleh kosong")
+        let rawPagesText = try await ocrService.extractText(from: fileURL, onProgress: nil)
+        XCTAssertFalse(rawPagesText.isEmpty, "Hasil OCR untuk \(fileName).\(fileExtension) tidak boleh kosong")
         
         // 3. Eksekusi Parser
         let script = try await parserService.parseScript(
             rawPagesText: rawPagesText,
-            scriptTitle: "Ruang Tunggu",
-            sourceFileName: "ruangtunggu.pdf"
+            scriptTitle: scriptTitle,
+            sourceFileName: "\(fileName).\(fileExtension)"
         )
         
         // 4. Verifikasi Hasil Parsing
-        XCTAssertEqual(script.title, "Ruang Tunggu")
+        XCTAssertEqual(script.title, scriptTitle)
         XCTAssertGreaterThan(script.pages.count, 0, "Jumlah halaman harus lebih dari 0")
         
         let allBlocks = script.pages.flatMap { $0.blocks }
@@ -52,16 +86,14 @@ final class ScriptOCRParserTests: XCTestCase {
         
         // Memastikan tokoh PRIA dan WANITA terdeteksi di dalam blok dialog
         let characterNames = Set(allBlocks.compactMap { $0.characterName })
-        XCTAssertTrue(characterNames.contains("PRIA"), "Harus mendeteksi tokoh PRIA")
-        XCTAssertTrue(characterNames.contains("WANITA"), "Harus mendeteksi tokoh WANITA")
+        XCTAssertTrue(characterNames.contains("PRIA"), "[\(fileName)] Harus mendeteksi tokoh PRIA")
+        XCTAssertTrue(characterNames.contains("WANITA"), "[\(fileName)] Harus mendeteksi tokoh WANITA")
         
-        // Cetak ringkasan ke Console untuk inspeksi manual
-        print("====== HASIL PARSING NASKAH ======")
+        print("====== HASIL PARSING [\(fileName).\(fileExtension)] ======")
         print("Judul: \(script.title)")
         print("Total Halaman: \(script.pages.count)")
         print("Total Blok: \(allBlocks.count)")
         print("Daftar Tokoh: \(characterNames)")
-        print("Sample Block 1: \(allBlocks.first?.content ?? "")")
-        print("=================================")
+        print("=========================================================")
     }
 }

@@ -7,6 +7,7 @@
 
 import Foundation
 import PDFKit
+import UIKit
 import Vision
 
 public final class VisionOCRService: VisionOCRServiceProtocol {
@@ -17,40 +18,49 @@ public final class VisionOCRService: VisionOCRServiceProtocol {
         from url: URL,
         onProgress: ((Double) -> Void)?
     ) async throws -> [Int: String] {
-        guard let pdfDocument = PDFDocument(url: url) else {
-            throw OCRError.pdfCorrupted
-        }
-        
-        let totalPages = pdfDocument.pageCount
-        guard totalPages > 0 else {
-            throw OCRError.emptyPageText
-        }
-        
-        var rawPagesText: [Int: String] = [:]
-        
-        for pageIndex in 0..<totalPages {
-            let pageNum = pageIndex + 1
-            guard let pdfPage = pdfDocument.page(at: pageIndex) else { continue }
-            
-            // 1. FAST PATH: Ambil langsung jika PDF berbasis teks digital
-            if let directText = pdfPage.string,
-               !directText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                rawPagesText[pageNum] = directText
-            } else {
-                // 2. FALLBACK PATH: Render CGImage & Vision OCR jika PDF murni Scan/Gambar
-                let recognizedText = try await recognizeTextFromVision(pdfPage: pdfPage)
-                rawPagesText[pageNum] = recognizedText
+        // 1. PATH PDF (Digital & Scanned PDF)
+        if let pdfDocument = PDFDocument(url: url) {
+            let totalPages = pdfDocument.pageCount
+            guard totalPages > 0 else {
+                throw OCRError.emptyPageText
             }
             
-            // Kirim callback progress real-time ke UI
-            let progress = Double(pageNum) / Double(totalPages)
-            onProgress?(progress)
+            var rawPagesText: [Int: String] = [:]
+            
+            for pageIndex in 0..<totalPages {
+                let pageNum = pageIndex + 1
+                guard let pdfPage = pdfDocument.page(at: pageIndex) else { continue }
+                
+                // FAST PATH: PDF berbasis teks digital
+                if let directText = pdfPage.string,
+                   !directText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    rawPagesText[pageNum] = directText
+                } else {
+                    // FALLBACK PATH: Vision OCR jika PDF berbasis gambar/scan
+                    let recognizedText = try await recognizeTextFromVision(pdfPage: pdfPage)
+                    rawPagesText[pageNum] = recognizedText
+                }
+                
+                let progress = Double(pageNum) / Double(totalPages)
+                onProgress?(progress)
+            }
+            
+            return rawPagesText
         }
         
-        return rawPagesText
+        // 2. PATH GAMBAR MURNI (.jpg, .png, dll)
+        if let uiImage = UIImage(contentsOfFile: url.path),
+           let cgImage = uiImage.cgImage {
+            let recognizedText = try await recognizeTextFromCGImage(cgImage)
+            onProgress?(1.0)
+            return [1: recognizedText]
+        }
+        
+        // 3. Throw Error jika bukan PDF maupun Gambar yang valid
+        throw OCRError.pdfCorrupted
     }
     
-    // MARK: - Helper Vision OCR Visual Processing
+    // MARK: - Helper Vision OCR dari PDF Page
     private func recognizeTextFromVision(pdfPage: PDFPage) async throws -> String {
         let pageRect = pdfPage.bounds(for: .mediaBox)
         let renderer = UIGraphicsImageRenderer(size: pageRect.size)
@@ -67,6 +77,11 @@ public final class VisionOCRService: VisionOCRServiceProtocol {
             throw OCRError.failedToRenderImage
         }
         
+        return try await recognizeTextFromCGImage(cgImage)
+    }
+    
+    // MARK: - Helper Vision OCR dari CGImage
+    private func recognizeTextFromCGImage(_ cgImage: CGImage) async throws -> String {
         return try await withCheckedThrowingContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
                 if let error = error {
