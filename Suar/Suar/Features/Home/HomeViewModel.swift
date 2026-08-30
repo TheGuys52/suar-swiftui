@@ -20,7 +20,11 @@ public final class HomeViewModel {
     public var newlyProcessedScript: Script?
     public var currentScriptTitle: String = ""
     
-    private let repository: ScriptRepositoryProtocol?
+    private let injectedRepository: ScriptRepositoryProtocol?
+    private var repository: ScriptRepositoryProtocol? {
+        injectedRepository ?? DIContainer.shared.scriptRepository
+    }
+    
     private let ocrService: VisionOCRServiceProtocol?
     private let parserService: ScriptParserServiceProtocol?
     
@@ -29,7 +33,7 @@ public final class HomeViewModel {
         ocrService: VisionOCRServiceProtocol? = nil,
         parserService: ScriptParserServiceProtocol? = nil
     ) {
-        self.repository = repository ?? DIContainer.shared.scriptRepository
+        self.injectedRepository = repository
         self.ocrService = ocrService ?? DIContainer.shared.ocrService
         self.parserService = parserService ?? DIContainer.shared.parserService
     }
@@ -75,7 +79,7 @@ public final class HomeViewModel {
                     }
                     return
                 }
-
+                
                 await self.processSelectedFile(url: url)
                 url.stopAccessingSecurityScopedResource()
             }
@@ -83,11 +87,11 @@ public final class HomeViewModel {
             if let cocoaError = error as? CocoaError, cocoaError.code == .userCancelled {
                 return
             }
-
+            
             errorMessage = error.localizedDescription
         }
     }
-
+    
     /// Menjalankan pipeline OCR + parsing + save. Progress di-update secara real-time (0-70% OCR, 70-90% parsing, 90-100% save).
     /// Pada sukses, menyimpan script dan menampilkan success alert. Pada gagal, menampilkan error message.
     public func processSelectedFile(url: URL) async {
@@ -95,7 +99,7 @@ public final class HomeViewModel {
             errorMessage = "Layanan impor belum dikonfigurasi."
             return
         }
-
+        
         isImporting = true
         currentScriptTitle = url.deletingPathExtension().lastPathComponent
         progressPercentage = 0.0
@@ -105,7 +109,7 @@ public final class HomeViewModel {
             progressPercentage = 0.0
             progressStatusMessage = ""
         }
-
+        
         do {
             let rawPagesText = try await ocrService.extractText(from: url) { [weak self] ocrProgress in
                 Task { @MainActor in
@@ -113,22 +117,22 @@ public final class HomeViewModel {
                     self?.progressStatusMessage = "Mengekstrak teks dari halaman..."
                 }
             }
-
+            
             progressStatusMessage = "Menganalisis struktur naskah..."
             progressPercentage = 0.7
-
+            
             let script = try await parserService.parseScript(
                 rawPagesText: rawPagesText,
                 scriptTitle: url.deletingPathExtension().lastPathComponent,
                 sourceFileName: url.lastPathComponent
             )
-
+            
             progressStatusMessage = "Menyimpan naskah..."
             progressPercentage = 0.9
-
+            
             try await repository.save(script: script)
             progressPercentage = 1.0
-
+            
             newlyProcessedScript = script
             showSuccessAlert = true
             errorMessage = nil

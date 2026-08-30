@@ -10,10 +10,10 @@ import SwiftUI
 
 @main
 struct SuarApp: App {
-    @State private var coordinator: AppCoordinator = AppCoordinator()
+    @State private var coordinator: AppCoordinator
+    let sharedModelContainer: ModelContainer
     
-    // MARK: - SwiftData Container Setup
-    var sharedModelContainer: ModelContainer = {
+    init() {
         let schema = Schema([
             Script.self,
             ScriptPage.self,
@@ -22,20 +22,22 @@ struct SuarApp: App {
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            self.sharedModelContainer = container
+            
+            // 1. Konfigurasi DIContainer terlebih dahulu
+            DIContainer.shared.configure(modelContext: container.mainContext)
+            
+            // 2. Buat instance AppCoordinator setelah DIContainer siap
+            _coordinator = State(wrappedValue: AppCoordinator())
         } catch {
             fatalError("Failed to initialize SwiftData ModelContainer: \(error.localizedDescription)")
         }
-    }()
-    
-    init() {}
+    }
 
     var body: some Scene {
         WindowGroup {
             coordinator.start()
-                .task {
-                    DIContainer.shared.configure(modelContext: sharedModelContainer.mainContext)
-                }
         }
         .modelContainer(sharedModelContainer)
     }
