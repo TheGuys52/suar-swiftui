@@ -44,46 +44,23 @@ let page2 = ScriptPageMock(
         ScriptElementMock(
             type: .description,
             content: """
-            HAL YANG PERTAMA MUNCUL ADALAH SUARA ORANG-ORANG:
-            KERAMAIAN. ATAU LEBIH TEPATNYA, TERIAKAN-TERIAKAN YANG KACAU
-            DAN BERISIK. SEPERTI ADA SEKUMPULAN BESAR ORANG YANG SEDANG
-            MENERIAKI SESUATU. NAMUN SITUASI PANGGUNG SANGATLAH GELAP.
-            BUNYI-BUNYIAN ITU AMAT BERISIK. SEPERTI KERUMUNAN MASSA YANG
-            TIDAK KENAL LELAH MENERIAKKAN APA PUN YANG KELUAR DARI MULUT
-            MEREKA. KEMUDIAN KEGELAPAN PERLAHAN DIUSIR PERGI, CAHAYA
-            MENYERUAK. LAMPU MENYALA SATU PER SATU. TAMPAK LATAR RUANG
-            TUNGGU. WUJUDNYA SERUPA KORIDOR YANG PANJANG, DENGAN ENAM
-            BUAH BANGKU TUNGGU KAYU YANG TAMPAK DINGIN.
+            Hal yang pertama muncul adalah suara orang-orang: keramaian, atau lebih tepatnya, teriakan-teriakan yang kacau dan berisik. Seperti ada sekumpulan besar orang yang sedang meneriaki sesuatu. namun situasi panggung sangatlah gelap. bunyi-bunyian itu amat berisik. Seperti kerumunan massa yang tidak kenal lelah meneriakkan apa pun yang keluar dari mulut mereka. kemudian kegelapan perlahan diusir pergi, cahaya menyeruak. lampu menyala satu per satu. Tampak latar ruang tunggu. wujudnya serupa koridor yang panjang, dengan enam buah bangku tunggu kayu yang tampak dingin.
             """,
             order: 3
         ),
         ScriptElementMock(
             type: .description,
-            content: "Bunyi-bunyian itu amat berisik. Seperti kerumunan massa yang " +
-                "tidak kenal lelah meneriakkan apa pun yang keluar dari mulut mereka. " +
-                "Kemudian kegelapan perlahan diusir pergi, cahaya menyeruak. " +
-                "Lampu menyala satu per satu. Tampak latar ruang tunggu. " +
-                "Wujudnya serupa koridor yang panjang, dengan enam buah bangku tunggu " +
-                "kayu yang tampak dingin.",
+            content: """
+                Di atasnya, lampu-lampu pijar menyala dan menggantung tak berdaya. dinding di sisi belakang berwarna hijau kelabu. Terdapat sejumlah poster iklan, berita orang hilang, dan grafiti-grafiti kotor yang serampangan. dari samping kanan, seorang pemuda berjalan dengan hati-hati. Tampangnya kotor, gelisah, sorot matanya mengamati sekeliling dengan rasa takut yang kentara. Sejenak dia berhenti, lalu jalan lagi, lalu berhenti, lalu jalan lagi.
+                """,
             order: 4
         ),
         ScriptElementMock(
             type: .description,
-            content: "Di atasnya, lampu-lampu pijar menyala dan menggantung tak berdaya. " +
-                "Dinding di sisi belakang berwarna hijau kelabu. " +
-                "Terdapat sejumlah poster iklan, berita orang hilang, dan " +
-                "grafiti-grafiti kotor yang serampangan. Dari samping kanan, " +
-                "seorang pemuda berjalan dengan hati-hati. Tampangnya kotor, gelisah, " +
-                "sorot matanya mengamati sekeliling dengan rasa takut yang kentara. " +
-                "Sejenak dia berhenti, lalu jalan lagi, lalu berhenti, lalu jalan lagi.",
+            content: """
+                Dia berhenti sepenuhnya di salah satu bangku. Lalu dia duduk. Kedua tangannya memegang sebuah tas kulit. Napasnya terengah-engah.
+                """,
             order: 5
-        ),
-        ScriptElementMock(
-            type: .description,
-            content: "Dia berhenti sepenuhnya di salah satu bangku. " +
-                "Lalu dia duduk. Kedua tangannya memegang sebuah tas kulit. " +
-                "Napasnya terengah-engah.",
-            order: 6
         ),
         ScriptElementMock(
             type: .dialogue,
@@ -93,7 +70,7 @@ let page2 = ScriptPageMock(
                 "dan bagai angin kering yang memecah musim penghujan. " +
                 "Ya Tuhan, ya Tuhan, ya Tuhaann. Tuhanku, Tuhanku, Tuhanku… " +
                 "(menundukkan kepala dengan lemas)",
-            order: 7
+            order: 6
         ),
         ScriptElementMock(
             type: .description,
@@ -101,7 +78,7 @@ let page2 = ScriptPageMock(
                 "kedip-kedip. Suara arus listrik berdenyut dengan janggal. " +
                 "Pria terkejut, bingung, bangkit dan sejenak mengamati peristiwa itu " +
                 "disertai tanda tanya besar.",
-            order: 8
+            order: 7
         )
     ]
 )

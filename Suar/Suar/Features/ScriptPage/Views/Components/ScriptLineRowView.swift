@@ -20,19 +20,20 @@ struct ScriptLineRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             if let characterName = line.characterName {
                 Text(characterName)
-                    .font(.headline)
-                    .foregroundStyle(Color.themeRed)
+                    .font(Font.custom("Courier", size: 20))
+                    .foregroundStyle(.primary)
+                    .bold()
+                
             }
 
             if let cue = line.cueDescription {
                 Text(cue)
-                    .font(.caption)
-                    .italic()
+                    .font(Font.custom("Courier", size: 15))
                     .foregroundStyle(.secondary)
             }
 
             Text(line.content)
-                .font(.body)
+                .font(Font.custom("Courier", size: 18))
                 .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -53,8 +54,7 @@ struct ScriptLineRowView: View {
 
     private var stageDirectionRow: some View {
         Text(line.content)
-            .font(.body)
-            .italic()
+            .font(Font.custom("Courier", size: 18))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
@@ -65,9 +65,8 @@ struct ScriptLineRowView: View {
 
     private var titleRow: some View {
         Text(line.content)
-            .font(.title3)
+            .font(Font.custom("Courier", size: 18))
             .bold()
-            .foregroundStyle(Color.themeRed)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Judul. \(line.content)")

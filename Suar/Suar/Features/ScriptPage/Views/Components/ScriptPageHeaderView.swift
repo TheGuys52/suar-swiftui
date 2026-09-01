@@ -5,7 +5,7 @@ struct ScriptPageHeaderView: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            backButton
+            Spacer()
             titleText
             Spacer()
             pageIndicator
@@ -14,34 +14,19 @@ struct ScriptPageHeaderView: View {
         .padding(.vertical, 12)
         .background(Color.white)
     }
-
-    private var backButton: some View {
-        Button {
-            viewModel.didTapBack()
-        } label: {
-            Image(systemName: "chevron.left")
-                .font(.title3)
-                .foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background(Color.themeRed)
-                .clipShape(Circle())
-        }
-        .accessibilityLabel("Kembali ke halaman sebelumnya")
-        .accessibilityHint("Ketuk untuk kembali")
-    }
-
+    
     private var titleText: some View {
         Text(viewModel.scriptTitle)
-            .font(.title2)
+            .font(Font.custom("Courier", size: 24))
             .bold()
-            .foregroundStyle(Color.themeRed)
             .lineLimit(1)
     }
 
     private var pageIndicator: some View {
         Text(pageIndicatorText)
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .font(Font.custom("Courier", size: 20))
+            .foregroundStyle(.primary)
+            .bold()
             .accessibilityLabel(
                 "Halaman \(viewModel.currentPageNumber) dari \(viewModel.totalPages)"
             )

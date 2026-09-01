@@ -5,13 +5,11 @@ struct ScriptPageNavigationView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Spacer()
             previousButton
             Spacer()
             nextButton
-            Spacer()
         }
-        .padding(.vertical, 16)
+        .padding(.horizontal, 24)
     }
 
     private var previousButton: some View {
@@ -76,20 +74,6 @@ struct ScriptPageNavigationView: View {
 #Preview("First Page") {
     let vm = ScriptPageViewModel()
     vm.currentPageNumber = 1
-    vm.totalPages = 10
-    return ScriptPageNavigationView(viewModel: vm)
-}
-
-#Preview("Middle Page") {
-    let vm = ScriptPageViewModel()
-    vm.currentPageNumber = 5
-    vm.totalPages = 10
-    return ScriptPageNavigationView(viewModel: vm)
-}
-
-#Preview("Last Page") {
-    let vm = ScriptPageViewModel()
-    vm.currentPageNumber = 10
     vm.totalPages = 10
     return ScriptPageNavigationView(viewModel: vm)
 }
