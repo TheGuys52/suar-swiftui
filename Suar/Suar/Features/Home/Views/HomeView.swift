@@ -104,6 +104,9 @@ struct HomeView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .onTapGesture {
+            hideKeyboard()
+        }
     }
 }
 
