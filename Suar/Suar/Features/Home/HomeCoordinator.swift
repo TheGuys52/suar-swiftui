@@ -28,13 +28,22 @@ public final class HomeCoordinator: CoordinatorProtocol {
         viewModel.onImportTapped = { [weak self] in
             self?.isPresentingImportPicker = true
         }
-        
+
         viewModel.onSelectScript = { [weak self] scriptId in
             self?.router.push(.reader(scriptId: scriptId))
         }
-        
+
         viewModel.onLibraryTapped = { [weak self] in
             self?.router.push(.library)
         }
+
+        viewModel.onOpenScriptReader = { [weak self] script in
+            self?.openScriptReader(script: script)
+        }
+    }
+
+    /// Navigasi ke halaman reader untuk script tertentu berdasarkan ID.
+    public func openScriptReader(script: Script) {
+        router.push(.reader(scriptId: script.id))
     }
 }
