@@ -38,6 +38,7 @@ struct SuarApp: App {
     var body: some Scene {
         WindowGroup {
             coordinator.start()
+                .preferredColorScheme(.light)
         }
         .modelContainer(sharedModelContainer)
     }
