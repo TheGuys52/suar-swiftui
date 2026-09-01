@@ -2,24 +2,27 @@
 //  OCRError.swift
 //  Suar
 //
-//  Created by Adiat Rahman on 27/08/26.
+//  Created by DIMAS DAFFA ERNANDA on 30/08/26.
 //
 
 import Foundation
 
 public enum OCRError: LocalizedError {
-    case cannotOpenDocument
-    case cannotLoadImage
-    case cannotConvertImage
+    case fileAccessDenied
+    case pdfCorrupted
+    case emptyPageText
+    case failedToRenderImage
     
     public var errorDescription: String? {
         switch self {
-        case .cannotOpenDocument:
-            return "Cannot open document"
-        case .cannotLoadImage:
-            return "Cannot load image"
-        case .cannotConvertImage:
-            return "Cannot convert image for OCR"
+        case .fileAccessDenied:
+            return "Tidak dapat mengakses izin berkas PDF."
+        case .pdfCorrupted:
+            return "Berkas PDF rusak atau tidak dapat dibuka."
+        case .emptyPageText:
+            return "Teks tidak ditemukan pada halaman naskah."
+        case .failedToRenderImage:
+            return "Gagal me-render gambar dari halaman PDF."
         }
     }
 }

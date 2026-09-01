@@ -2,12 +2,13 @@
 //  ScriptParserService.swift
 //  Suar
 //
-//  Created by Adiat Rahman on 28/08/26.
+//  Created by DIMAS DAFFA ERNANDA on 27/08/26.
 //
 
 import Foundation
 
-public struct ScriptParserService: ScriptParserServiceProtocol {
+public final class ScriptParserService: ScriptParserServiceProtocol {
+    
     public init() {}
     
     public func parseScript(
@@ -15,285 +16,261 @@ public struct ScriptParserService: ScriptParserServiceProtocol {
         scriptTitle: String,
         sourceFileName: String
     ) async throws -> Script {
-        // Buat object script kosong
-        let script = Script(title: scriptTitle, sourceFileName: sourceFileName)
+        var allPages: [ScriptPage] = []
+        var globalBlockOrder = 1
         
-        // Global counter untuk orderIndex
-        var globalOrderIndex = 0
+        let sortedPageNumbers = rawPagesText.keys.sorted()
         
-        // Iterasi setiap halaman urut
-        for pageNumber in rawPagesText.keys.sorted() {
-            guard let rawText = rawPagesText[pageNumber] else {
+        for pageNum in sortedPageNumbers {
+            guard let pageContent = rawPagesText[pageNum] else { continue }
+            
+            let (parsedBlocks, nextOrder) = parsePageContent(
+                pageContent,
+                pageNumber: pageNum,
+                startingOrder: globalBlockOrder
+            )
+            
+            globalBlockOrder = nextOrder
+            
+            let scriptPage = ScriptPage(
+                pageNumber: pageNum,
+                blocks: parsedBlocks
+            )
+            allPages.append(scriptPage)
+        }
+        
+        return Script(
+            title: scriptTitle,
+            lastReadPage: 1,
+            pageCount: sortedPageNumbers.count,
+            sourceFileName: sourceFileName,
+            pages: allPages
+        )
+    }
+    
+    // MARK: - Core Parser State Machine
+    private func parsePageContent(
+        _ content: String,
+        pageNumber: Int,
+        startingOrder: Int
+    ) -> ([ScriptBlock], Int) {
+        var blocks: [ScriptBlock] = []
+        var currentOrder = startingOrder
+        
+        let rawLines = content.components(separatedBy: .newlines)
+        let normalizedLines = normalizeAndMergeLines(rawLines)
+        
+        var lineIndex = 0
+        while lineIndex < normalizedLines.count {
+            let line = normalizedLines[lineIndex].trimmingCharacters(in: .whitespaces)
+            
+            if line.isEmpty {
+                lineIndex += 1
                 continue
             }
             
-            // Buat ScriptPage untuk halaman ini
-            let page = ScriptPage(pageNumber: pageNumber, rawExtractedText: rawText, script: script)
+            // 1. Deteksi Header Babak / Judul Bagian
+            if isSceneHeader(line) {
+                let block = ScriptBlock(
+                    orderIndex: currentOrder,
+                    blockType: .sceneHeader,
+                    content: line
+                )
+                blocks.append(block)
+                currentOrder += 1
+                lineIndex += 1
+                continue
+            }
             
-            // Pecah teks jadi baris (newline)
-            let lines = rawText.components(separatedBy: "\n")
-            
-            // Klasifikasi character name per baris
-            var previousWasCharacterName = false
-            
-            var hasSeenCharacterNameInSplit = false
-            
-            var narrationBuffer = ""
-            
-            for line in lines {
-                let trimmed = line.trimmingCharacters(in: .whitespaces)
+            // 2. Deteksi Tokoh dan Dialog
+            if let (character, initialDialogue) = matchCharacterAndDialogue(line) {
+                var fullDialogue = initialDialogue
                 
-                if trimmed.isEmpty {
-                    // Flush narration buffer
-                    if !narrationBuffer.isEmpty {
-                        let merged = narrationBuffer.trimmingCharacters(in: .whitespaces)
-                        let block = ScriptBlock(
-                            orderIndex: globalOrderIndex,
-                            blockType: .narration,
-                            content: merged,
-                            page: page
-                        )
-                        page.blocks.append(block)
-                        globalOrderIndex += 1
-                        narrationBuffer = ""
+                lineIndex += 1
+                while lineIndex < normalizedLines.count {
+                    let nextLine = normalizedLines[lineIndex].trimmingCharacters(in: .whitespaces)
+                    if nextLine.isEmpty || isSceneHeader(nextLine) || matchCharacterAndDialogue(nextLine) != nil || isStageDirection(nextLine) {
+                        break
                     }
-                    previousWasCharacterName = false
-                    continue
+                    fullDialogue += "\n" + nextLine
+                    lineIndex += 1
                 }
                 
-                // Coba pecah line (characterName + stageDirection + dialogue)
-                let splitBlocks = splitMixedLine(trimmed)
+                let (cueText, cleanDialogueText) = extractCue(from: fullDialogue)
                 
-                if splitBlocks.count > 1 {
-                    // Line mengandung multiple types — flush buffer narration dulu
-                    if !narrationBuffer.isEmpty {
-                        let merged = narrationBuffer.trimmingCharacters(in: .whitespaces)
-                        let block = ScriptBlock(
-                            orderIndex: globalOrderIndex,
-                            blockType: .narration,
-                            content: merged,
-                            page: page
-                        )
-                        page.blocks.append(block)
-                        globalOrderIndex += 1
-                        narrationBuffer = ""
+                let block = ScriptBlock(
+                    orderIndex: currentOrder,
+                    blockType: .dialogue,
+                    characterName: character,
+                    content: cleanDialogueText,
+                    cueDescription: cueText
+                )
+                blocks.append(block)
+                currentOrder += 1
+                continue
+            }
+            
+            // 3. Deteksi Petunjuk Panggung / Narasi
+            if isStageDirection(line) {
+                var fullStageDirection = line
+                lineIndex += 1
+                while lineIndex < normalizedLines.count {
+                    let nextLine = normalizedLines[lineIndex].trimmingCharacters(in: .whitespaces)
+                    if nextLine.isEmpty || isSceneHeader(nextLine) || matchCharacterAndDialogue(nextLine) != nil {
+                        break
                     }
-                    
-                    // Process setiap block hasil split (tidak buffering)
-                    for (blockType, content, _) in splitBlocks {
-                        var finalType = blockType
-
-                        // Override: narration + ada characterName sebelumnya di split ini
-                        if finalType == .narration && hasSeenCharacterNameInSplit {
-                            finalType = .dialogue
-                        }
-
-                        let block = ScriptBlock(
-                            orderIndex: globalOrderIndex,
-                            blockType: finalType,
-                            content: content,
-                            page: page
-                        )
-
-                        if finalType == .characterName {
-                            let name = content.trimmingCharacters(in: CharacterSet(charactersIn: ":"))
-                            block.characterName = name
-                            hasSeenCharacterNameInSplit = true
-                            previousWasCharacterName = true
-                        } else {
-                            previousWasCharacterName = false
-                        }
-
-                        page.blocks.append(block)
-                        globalOrderIndex += 1
-                    }
-                    
+                    fullStageDirection += " " + nextLine
+                    lineIndex += 1
+                }
+                
+                let block = ScriptBlock(
+                    orderIndex: currentOrder,
+                    blockType: .stageDirection,
+                    content: fullStageDirection
+                )
+                blocks.append(block)
+                currentOrder += 1
+                continue
+            }
+            
+            // Fallback Narasi
+            let block = ScriptBlock(
+                orderIndex: currentOrder,
+                blockType: .stageDirection,
+                content: line
+            )
+            blocks.append(block)
+            currentOrder += 1
+            lineIndex += 1
+        }
+        
+        return (blocks, currentOrder)
+    }
+    
+    // MARK: - Normalization & Line Merging
+    private func normalizeAndMergeLines(_ rawLines: [String]) -> [String] {
+        var cleaned: [String] = []
+        
+        // Step A: Cleaning noise & pipe symbols
+        for line in rawLines {
+            var trimmed = line.trimmingCharacters(in: .whitespaces)
+            
+            // Clean table/PDF vertical bars
+            if trimmed.hasPrefix("|") {
+                trimmed = String(trimmed.dropFirst()).trimmingCharacters(in: .whitespaces)
+            }
+            if trimmed.contains("| :") {
+                trimmed = trimmed.replacingOccurrences(of: "| :", with: ":")
+            }
+            
+            // Filter noise header/footer
+            let noisePattern = "Lakon Ruang Tunggu.*"
+            let range = NSRange(location: 0, length: trimmed.utf16.count)
+            if let regex = try? NSRegularExpression(pattern: noisePattern, options: .caseInsensitive),
+               regex.firstMatch(in: trimmed, options: [], range: range) != nil {
+                continue
+            }
+            
+            if !trimmed.isEmpty {
+                cleaned.append(trimmed)
+            }
+        }
+        
+        // Step B: Merge split character header & dialogue lines
+        var result: [String] = []
+        var characterQueue: [String] = []
+        
+        for line in cleaned {
+            if line.hasPrefix(":") {
+                if !characterQueue.isEmpty {
+                    let charName = characterQueue.removeFirst()
+                    result.append("\(charName) \(line)")
                 } else {
-                    // Line tunggal — pakai classify normal + narration buffering
-                    var blockType = classify(line: trimmed)
-                    
-                    if blockType == .narration && previousWasCharacterName {
-                        blockType = .dialogue
-                    }
-                    
-                    if blockType == .narration {
-                        narrationBuffer += trimmed + " "
-                    } else {
-                        // Flush buffer narration
-                        if !narrationBuffer.isEmpty {
-                            let merged = narrationBuffer.trimmingCharacters(in: .whitespaces)
-                            let block = ScriptBlock(
-                                orderIndex: globalOrderIndex,
-                                blockType: .narration,
-                                content: merged,
-                                page: page
-                            )
-                            page.blocks.append(block)
-                            globalOrderIndex += 1
-                            narrationBuffer = ""
-                        }
-                        
-                        let block = ScriptBlock(
-                            orderIndex: globalOrderIndex,
-                            blockType: blockType,
-                            content: trimmed,
-                            page: page
-                        )
-                        
-                        if blockType == .characterName {
-                            var name = trimmed.trimmingCharacters(in: CharacterSet(charactersIn: ":"))
-                            block.characterName = name
-                            previousWasCharacterName = true
-                        } else {
-                            previousWasCharacterName = false
-                        }
-                        
-                        page.blocks.append(block)
-                        globalOrderIndex += 1
-                    }
+                    result.append(line)
                 }
-            }
-            
-            // Tambah halaman ke script
-            script.pages.append(page)
-        }
-        
-        // Update pageCount di script
-        script.pageCount = script.pages.count
-        
-        return script
-    }
-    
-    // MARK: - Regex Patterns
-    
-    private let sceneHeaderPattern: NSRegularExpression? = {
-        try? NSRegularExpression(
-            pattern: "^(ACT|SCENE|BAB|EPISODE|PROLOGUE|EPILOGUE)\\s+[IVXLCDM0-9A-Za-z]+",
-            options: []
-        )
-    }()
-    
-    private let stageDirectionPattern: NSRegularExpression? = {
-        try? NSRegularExpression(
-            pattern: "^\\s*(\\(|\\[).*(\\)|\\])\\s*$",
-            options: []
-        )
-    }()
-    
-    // MARK: - Implement Classify
-    
-    private func classify(line: String) -> ScriptBlockType {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-        
-        // Cek Stage Dircetion
-        if isStageDirection(trimmed) {
-            return .stageDirection
-        }
-        
-        // Cek Scene Header
-        if isSceneHeader(trimmed) {
-            return .sceneHeader
-        }
-        
-        // Cek character name (ada colon di akhir)
-        if isCharacterName(trimmed) {
-            return .characterName
-        }
-        
-        return .narration
-    }
-    
-    private func isStageDirection(_ line: String) -> Bool {
-        guard let regex = stageDirectionPattern else { return false }
-        let range = NSRange(line.startIndex..., in: line)
-        return regex.firstMatch(in: line, options: [], range: range)  != nil
-    }
-    
-    private func isSceneHeader(_ line: String) -> Bool {
-        guard let regex = sceneHeaderPattern else { return false }
-        let range = NSRange(line.startIndex..., in: line)
-        return regex.firstMatch(in: line, options: [], range: range) != nil
-    }
-    
-    private func isCharacterName(_ line: String) -> Bool {
-        let trimmed = line.trimmingCharacters(in: .whitespaces)
-        
-        // Cek ada colon
-        guard let colonIndex = trimmed.firstIndex(of: ":") else { return false }
-        
-        // Ambil bagian sebelum colon
-        let namePart = String(trimmed[..<colonIndex]).trimmingCharacters(in: .whitespaces)
-        
-        // Too long = narasi/deskripsi
-        if namePart.count > 30 { return false }
-        
-        // Too many words = narasi
-        let words = namePart.split(separator: " ")
-        if words.count > 4 { return false }
-        
-        // All lowercase = narasi section header
-        if namePart.filter({ $0.isLetter }).allSatisfy({ $0.isLowercase }) {
-            return false
-        }
-        
-        // Allow single word ALL CAPS (contoh "JOHN:", "PRIA:")
-        if words.count == 1 {
-            return namePart.filter({ $0.isLetter }).allSatisfy({ $0.isUppercase })
-        }
-        
-        // Has lowercase letters = narasi (character name usually all caps)
-        if namePart.contains(where: { $0.isLowercase }) {
-            return false
-        }
-        
-        return true
-    }
-    
-    // MARK: - Line Splitting
-    
-    func splitMixedLine(_ line: String) -> [(blockType: ScriptBlockType, content: String, isAfterCharacterName: Bool)] {
-        var result: [(ScriptBlockType, String, Bool)] = []
-        var remaining = line.trimmingCharacters(in: .whitespaces)
-        
-        while !remaining.isEmpty {
-            // Cek stage direction
-            if remaining.hasPrefix("(") || remaining.hasPrefix("[") {
-                if let openIdx = remaining.firstIndex(where: { $0 == "(" || $0 == "[" }),
-                   let closeIdx = remaining.firstIndex(where: { $0 == ")" || $0 == "]" }),
-                   closeIdx > openIdx {
-                    let stageStart = remaining.index(after: openIdx)
-                    let stageContent = String(remaining[stageStart..<closeIdx])
-                    if !stageContent.trimmingCharacters(in: .whitespaces).isEmpty {
-                        result.append((.stageDirection, "(" + stageContent + ")", false))
-                    }
-                    remaining = String(remaining[remaining.index(after: closeIdx)...]).trimmingCharacters(in: .whitespaces)
-                    continue
+            } else if isStandaloneCharacterName(line) {
+                characterQueue.append(line)
+            } else {
+                // If there are leftover queued characters without dialogues
+                while !characterQueue.isEmpty {
+                    result.append(characterQueue.removeFirst())
                 }
+                result.append(line)
             }
-            
-            // Cek character name
-            if let colonIdx = remaining.firstIndex(of: ":") {
-                let namePart = String(remaining[..<colonIdx]).trimmingCharacters(in: .whitespaces)
-                if isCharacterName(namePart + ":") {
-                    var name = namePart
-                    let numberPattern = "^[0-9]+\\.\\s*"
-                    if let regex = try? NSRegularExpression(pattern: numberPattern) {
-                        let range = NSRange(name.startIndex..., in: name)
-                        name = regex.stringByReplacingMatches(in: name, range: range, withTemplate: "")
-                    }
-                    result.append((.characterName, name.trimmingCharacters(in: .whitespaces) + ":", true))
-                    remaining = String(remaining[remaining.index(after: colonIdx)...]).trimmingCharacters(in: .whitespaces)
-                    continue
-                }
-            }
-            
-            // Sisanya
-            if !remaining.isEmpty {
-                result.append((.narration, remaining, false))
-                remaining = ""
-            }
+        }
+        
+        while !characterQueue.isEmpty {
+            result.append(characterQueue.removeFirst())
         }
         
         return result
+    }
+    
+    private func isStandaloneCharacterName(_ line: String) -> Bool {
+        let pattern = "^(?:\\d+\\.\\s*)?([A-Z0-9\\s\\&\\-]+)$"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return false }
+        let range = NSRange(location: 0, length: line.utf16.count)
+        
+        if regex.firstMatch(in: line, options: [], range: range) != nil {
+            let cleanName = line.replacingOccurrences(of: "^\\d+\\.\\s*", with: "", options: .regularExpression)
+            return cleanName.count <= 25 && cleanName.components(separatedBy: .whitespaces).count <= 4
+        }
+        return false
+    }
+    
+    private func isSceneHeader(_ line: String) -> Bool {
+        let headers = ["Bagian Pertama", "Bagian Kedua", "Bagian Ketiga", "Bagian Keempat", "Dramatis Personae:", "***"]
+        return headers.contains { line.localizedCaseInsensitiveContains($0) }
+    }
+    
+    private func matchCharacterAndDialogue(_ line: String) -> (String, String)? {
+        let pattern = "^(?:\\d+\\.\\s*)?([A-Z0-9\\s\\&\\-]+)\\s*:\\s*(.*)$"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return nil }
+        
+        let nsString = line as NSString
+        let range = NSRange(location: 0, length: nsString.length)
+        
+        if let match = regex.firstMatch(in: line, options: [], range: range) {
+            var character = nsString.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespaces)
+            let dialogue = nsString.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
+            
+            // Normalisasi nama tokoh (contoh: "1. PRIA" -> "PRIA")
+            character = character.replacingOccurrences(of: "^\\d+\\.\\s*", with: "", options: .regularExpression)
+            
+            // Validasi: Panjang nama tokoh maks 25 karakter & maks 4 kata (mencegah narasi ALL CAPS terdeteksi tokoh)
+            if character.count <= 25 && character.components(separatedBy: .whitespaces).count <= 4 {
+                return (character, dialogue)
+            }
+        }
+        
+        return nil
+    }
+    
+    private func extractCue(from text: String) -> (String?, String) {
+        let pattern = "^\\s*\\(([^)]+)\\)\\s*(.*)$"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
+            return (nil, text)
+        }
+        
+        let nsString = text as NSString
+        let range = NSRange(location: 0, length: nsString.length)
+        
+        if let match = regex.firstMatch(in: text, options: [], range: range) {
+            let cue = nsString.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespaces)
+            let remainingDialogue = nsString.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
+            return (cue.isEmpty ? nil : cue, remainingDialogue)
+        }
+        
+        return (nil, text)
+    }
+    
+    private func isStageDirection(_ line: String) -> Bool {
+        let lettersOnly = line.components(separatedBy: CharacterSet.letters.inverted).joined()
+        guard !lettersOnly.isEmpty else { return false }
+        
+        let uppercaseLetters = lettersOnly.filter { $0.isUppercase }
+        let uppercaseRatio = Double(uppercaseLetters.count) / Double(lettersOnly.count)
+        
+        return uppercaseRatio >= 0.8
     }
 }

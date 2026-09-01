@@ -19,25 +19,13 @@ struct HomeView: View {
                         Button {
                             viewModel.didTapLibrary()
                         } label: {
-                            if #available(iOS 26.0, *) {
-                                Image(systemName: "questionmark")
-                                    .foregroundStyle(.white)
-                                    .bold()
-                                    .frame(width: 44, height: 44)
-                                    .glassEffect(
-                                        .regular
-                                            .tint(Color.themeRed)
-                                            .interactive()
-                                    )
-                            } else {
-                                Image(systemName: "questionmark")
-                                    .foregroundStyle(.white)
-                                    .bold()
-                                    .frame(width: 44, height: 44)
-                                    .background(Color.themeRed)
-                            }
+                            Image(systemName: "questionmark")
+                                .foregroundStyle(.white)
+                                .bold()
+                                .frame(width: 44, height: 44)
+                                .background(Color.themeRed)
+                                .clipShape(Circle())
                         }
-                        .clipShape(Circle())
                     }
                     .padding(.horizontal)
                     .padding(.top, 16)
@@ -64,26 +52,13 @@ struct HomeView: View {
                 Button {
                     viewModel.didTapImport()
                 } label: {
-                    if #available(iOS 26.0, *) {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .foregroundStyle(.white)
-                            .bold()
-                            .frame(width: 56, height: 56)
-                            .glassEffect(
-                                .regular
-                                    .tint(Color.themeRed)
-                                    .interactive()
-                            )
-                    } else {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .foregroundStyle(.white)
-                            .bold()
-                            .frame(width: 56, height: 56)
-                            .background(Color.themeRed)
-                            .clipShape(Circle())
-                    }
+                    Image(systemName: "plus")
+                        .font(.title2)
+                        .foregroundStyle(.white)
+                        .bold()
+                        .frame(width: 56, height: 56)
+                        .background(Color.themeRed)
+                        .clipShape(Circle())
                 }
             }
             .padding(.horizontal)
@@ -93,7 +68,7 @@ struct HomeView: View {
         .ignoresSafeArea(.keyboard)
         .fileImporter(
             isPresented: $isShowingFileImporter,
-            allowedContentTypes: [.pdf, .image],
+            allowedContentTypes: [.pdf, .jpeg, .png, .image],
             allowsMultipleSelection: false
         ) { result in
             switch result {
@@ -103,6 +78,31 @@ struct HomeView: View {
             case .failure(let error):
                 viewModel.handleSelectedFile(result: .failure(error))
             }
+        }
+        .overlay {
+            if viewModel.isImporting {
+                ProcessingProgressView(
+                    scriptTitle: viewModel.currentScriptTitle,
+                    progress: viewModel.progressPercentage,
+                    statusMessage: viewModel.progressStatusMessage
+                )
+            }
+        }
+        .alert("Naskah Berhasil Diproses", isPresented: $viewModel.showSuccessAlert) {
+            Button("Buka Reader") {
+                if let script = viewModel.newlyProcessedScript {
+                    viewModel.onOpenScriptReader?(script)
+                }
+            }
+            Button("Nanti Saja", role: .cancel) { }
+        }
+        .alert("Terjadi Kesalahan", isPresented: .init(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
     }
 }

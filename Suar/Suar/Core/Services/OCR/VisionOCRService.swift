@@ -2,7 +2,7 @@
 //  VisionOCRService.swift
 //  Suar
 //
-//  Created by Adiat Rahman on 27/08/26.
+//  Created by DIMAS DAFFA ERNANDA on 27/08/26.
 //
 
 import Foundation
@@ -10,108 +10,101 @@ import PDFKit
 import UIKit
 import Vision
 
-public struct VisionOCRService: VisionOCRServiceProtocol {
+public final class VisionOCRService: VisionOCRServiceProtocol {
+    
     public init() {}
     
-    public func extractText(from fileURL: URL, onProgress: (@Sendable (Double) -> Void)?) async throws -> [Int: String] {
-        
-        // Deteksi Tipe File (PDF atau Gambar)
-        let resourceValues = try fileURL.resourceValues(forKeys: [.contentTypeKey])
-        let contentType = resourceValues.contentType
-        
-        if contentType == .pdf {
-            // PDF
-            guard let pdfDocument = PDFDocument(url: fileURL) else {
-                throw OCRError.cannotOpenDocument
+    public func extractText(
+        from url: URL,
+        onProgress: ((Double) -> Void)?
+    ) async throws -> [Int: String] {
+        // 1. PATH PDF (Digital & Scanned PDF)
+        if let pdfDocument = PDFDocument(url: url) {
+            let totalPages = pdfDocument.pageCount
+            guard totalPages > 0 else {
+                throw OCRError.emptyPageText
             }
             
-            // PDF Ketikan
-            if let directText = pdfDocument.string, !directText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return [1: directText]
-            }
+            var rawPagesText: [Int: String] = [:]
             
-            // PDF Gambar
-            let pageCount = pdfDocument.pageCount
-            var results: [Int: String] = [:]
-            
-            // Iterasi Per Halaman
-            for pageIndex in 0..<pageCount {
-                guard let pdfPage = pdfDocument.page(at: pageIndex) else {
-                    continue
+            for pageIndex in 0..<totalPages {
+                let pageNum = pageIndex + 1
+                guard let pdfPage = pdfDocument.page(at: pageIndex) else { continue }
+                
+                // FAST PATH: PDF berbasis teks digital
+                if let directText = pdfPage.string,
+                   !directText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    rawPagesText[pageNum] = directText
+                } else {
+                    // FALLBACK PATH: Vision OCR jika PDF berbasis gambar/scan
+                    let recognizedText = try await recognizeTextFromVision(pdfPage: pdfPage)
+                    rawPagesText[pageNum] = recognizedText
                 }
                 
-                // Render ke UIImage
-                let pageRect = pdfPage.bounds(for: .mediaBox)
-                let renderer = UIGraphicsImageRenderer(size: pageRect.size)
-                let image = renderer.image { ctx in
-                    UIColor.white.setFill()
-                    ctx.fill(pageRect)
-                    ctx.cgContext.translateBy(x: 0, y: pageRect.size.height)
-                    ctx.cgContext.scaleBy(x: 1, y: -1)
-                    pdfPage.draw(with: .mediaBox, to: ctx.cgContext)
-                }
-                
-                // OCR Jalan di PDF
-                let pageNumber = pageIndex + 1
-                let text = try await performOCR(on: image)
-                results[pageNumber] = text
-                
-                // Progress
-                let progress = Double(pageNumber) / Double(pageCount)
+                let progress = Double(pageNum) / Double(totalPages)
                 onProgress?(progress)
             }
             
-            return results
-            
-        } else {
-            // Gambar
-            guard let image = UIImage(contentsOfFile: fileURL.path) else {
-                throw OCRError.cannotLoadImage
-            }
-            
-            let text = try await performOCR(on: image)
-            onProgress?(1.0)
-            
-            return [1: text]
+            return rawPagesText
         }
         
-//        return [:]
+        // 2. PATH GAMBAR MURNI (.jpg, .png, dll)
+        if let uiImage = UIImage(contentsOfFile: url.path),
+           let cgImage = uiImage.cgImage {
+            let recognizedText = try await recognizeTextFromCGImage(cgImage)
+            onProgress?(1.0)
+            return [1: recognizedText]
+        }
+        
+        // 3. Throw Error jika bukan PDF maupun Gambar yang valid
+        throw OCRError.pdfCorrupted
     }
     
-    private func performOCR(on image: UIImage) async throws -> String {
-        // Ekstrak Data Piksel dari UIImage
-        guard let cgImage = image.cgImage else {
-            throw OCRError.cannotConvertImage
+    // MARK: - Helper Vision OCR dari PDF Page
+    private func recognizeTextFromVision(pdfPage: PDFPage) async throws -> String {
+        let pageRect = pdfPage.bounds(for: .mediaBox)
+        let renderer = UIGraphicsImageRenderer(size: pageRect.size)
+        
+        let uiImage = renderer.image { context in
+            UIColor.white.set()
+            context.fill(pageRect)
+            context.cgContext.translateBy(x: 0, y: pageRect.size.height)
+            context.cgContext.scaleBy(x: 1.0, y: -1.0)
+            pdfPage.draw(with: .mediaBox, to: context.cgContext)
         }
         
+        guard let cgImage = uiImage.cgImage else {
+            throw OCRError.failedToRenderImage
+        }
+        
+        return try await recognizeTextFromCGImage(cgImage)
+    }
+    
+    // MARK: - Helper Vision OCR dari CGImage
+    private func recognizeTextFromCGImage(_ cgImage: CGImage) async throws -> String {
         return try await withCheckedThrowingContinuation { continuation in
-            // Request untuk membaca text
             let request = VNRecognizeTextRequest { request, error in
-                if let error {
+                if let error = error {
                     continuation.resume(throwing: error)
                     return
                 }
                 
-                // Bounding box berisi teks dan info posisi teks
                 guard let observations = request.results as? [VNRecognizedTextObservation] else {
                     continuation.resume(returning: "")
                     return
                 }
                 
-                let texts = observations.compactMap { observation in
+                let pageStrings = observations.compactMap { observation in
                     observation.topCandidates(1).first?.string
                 }
                 
-                let result = texts.joined(separator: "\n")
-                continuation.resume(returning: result)
+                continuation.resume(returning: pageStrings.joined(separator: "\n"))
             }
             
             request.recognitionLevel = .accurate
-            request.usesLanguageCorrection = false // Koreksi?
+            request.usesLanguageCorrection = true
             
-            // Eksekusi Request
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-            
             do {
                 try handler.perform([request])
             } catch {
