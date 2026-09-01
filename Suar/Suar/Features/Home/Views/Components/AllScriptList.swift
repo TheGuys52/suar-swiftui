@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AllScriptList: View {
     let scripts: [Script]
+    var onSelectScript: ((Script) -> Void)?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -21,6 +22,10 @@ struct AllScriptList: View {
                             title: script.title,
                             subtitle: script.sourceFileName
                         )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onSelectScript?(script)
+                        }
                     }
                 }
             }
@@ -31,18 +36,20 @@ struct AllScriptList: View {
 
 private struct EmptyScriptListPlaceholder: View {
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "doc.text")
-                .font(.title3)
-                .foregroundStyle(Color.themeRed)
-                .frame(width: 28)
+        HStack(alignment: .top, spacing: 14) {
+            Image(systemName: "doc.text.fill")
+                .font(.title2)
+                .foregroundStyle(.white)
+                .padding(10)
+                .background(Color.themeRed)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             
             VStack(alignment: .leading, spacing: 6) {
-                Text("Belum ada naskah")
+                Text("Naskah Masih Kosong")
                     .font(.headline)
                     .bold()
                 
-                Text("Saat kamu mengimpor PDF, file-nya akan muncul di sini.")
+                Text("Daftar naskah kamu belum tersedia. Tekan tombol + di kanan bawah untuk mengimpor file PDF naskahmu.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

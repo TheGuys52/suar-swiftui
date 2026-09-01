@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AllScriptsSection: View {
     let scripts: [Script]
+    var onSelectScript: ((Script) -> Void)?
     @State private var sortOption: SortOption = .newest
     
     enum SortOption: String, CaseIterable {
@@ -90,7 +91,10 @@ struct AllScriptsSection: View {
             .padding(.horizontal)
             
             ScrollView {
-                AllScriptList(scripts: sortedScripts)
+                AllScriptList(
+                    scripts: sortedScripts,
+                    onSelectScript: onSelectScript
+                )
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

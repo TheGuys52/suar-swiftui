@@ -29,9 +29,19 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
                     .padding(.top, 16)
-                    ContinueReadingSection(scripts: viewModel.recentScripts)
+                    ContinueReadingSection(
+                        scripts: viewModel.recentScripts,
+                        onSelectScript: { script in
+                            viewModel.didTapScript(id: script.id)
+                        }
+                    )
                     VStack(spacing: 16) {
-                        AllScriptsSection(scripts: viewModel.allScripts)
+                        AllScriptsSection(
+                            scripts: viewModel.allScripts,
+                            onSelectScript: { script in
+                                viewModel.didTapScript(id: script.id)
+                            }
+                        )
                     }
                     
                     Spacer().frame(height: 100)
