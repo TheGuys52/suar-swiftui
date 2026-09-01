@@ -29,9 +29,9 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
                     .padding(.top, 16)
-                    ContinueReadingSection()
+                    ContinueReadingSection(scripts: viewModel.recentScripts)
                     VStack(spacing: 16) {
-                        AllScriptsSection()
+                        AllScriptsSection(scripts: viewModel.allScripts)
                     }
                     
                     Spacer().frame(height: 100)
@@ -66,6 +66,10 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea(.keyboard)
+        .task {
+            await viewModel.fetchRecentScripts()
+            await viewModel.fetchAllScripts()
+        }
         .fileImporter(
             isPresented: $isShowingFileImporter,
             allowedContentTypes: [.pdf, .jpeg, .png, .image],

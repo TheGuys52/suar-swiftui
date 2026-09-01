@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct AllScriptsSection: View {
+    let scripts: [Script]
     @State private var sortOption: SortOption = .newest
     
     enum SortOption: String, CaseIterable {
@@ -89,13 +90,26 @@ struct AllScriptsSection: View {
             .padding(.horizontal)
             
             ScrollView {
-                AllScriptList()
+                AllScriptList(scripts: sortedScripts)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+
+    private var sortedScripts: [Script] {
+        switch sortOption {
+        case .newest:
+            return scripts.sorted { $0.createdAt > $1.createdAt }
+        case .oldest:
+            return scripts.sorted { $0.createdAt < $1.createdAt }
+        case .alphabeticalAZ:
+            return scripts.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+        case .alphabeticalZA:
+            return scripts.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+        }
+    }
 }
 
 #Preview {
-    AllScriptsSection()
+    AllScriptsSection(scripts: [])
 }

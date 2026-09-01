@@ -5,6 +5,7 @@ import Observation
 @Observable
 public final class HomeViewModel {
     public var recentScripts: [Script] = []
+    public var allScripts: [Script] = []
     public var isLoading = false
     public var isImporting = false
     public var errorMessage: String?
@@ -48,6 +49,22 @@ public final class HomeViewModel {
         
         do {
             recentScripts = try await repository.fetchRecentScripts(limit: 5)
+            errorMessage = nil
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    public func fetchAllScripts() async {
+        guard let repository else {
+            return
+        }
+
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            allScripts = try await repository.fetchAllScripts()
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
@@ -131,6 +148,7 @@ public final class HomeViewModel {
             progressPercentage = 0.9
             
             try await repository.save(script: script)
+            await fetchAllScripts()
             progressPercentage = 1.0
             
             newlyProcessedScript = script

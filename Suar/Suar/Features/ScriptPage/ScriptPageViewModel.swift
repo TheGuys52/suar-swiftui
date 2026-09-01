@@ -69,6 +69,7 @@ public final class ScriptPageViewModel {
             self.isLoading = false
             self.errorMessage = nil
             loadBlocksForCurrentPage()
+            try await repository.updateLastReadPage(scriptId: script.id, pageNumber: script.lastReadPage)
         } catch {
             self.errorMessage = error.localizedDescription
             self.isLoading = false
