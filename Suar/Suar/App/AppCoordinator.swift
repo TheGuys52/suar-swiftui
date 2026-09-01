@@ -37,16 +37,8 @@ public final class AppCoordinator: CoordinatorProtocol {
                                 .foregroundStyle(.secondary)
                         }
                         .padding()
-                    case .reader(let scriptId):
-                        VStack(spacing: 12) {
-                            Text("Reader")
-                                .font(.title)
-                                .bold()
-                            Text(scriptId.uuidString)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding()
+                    case .reader:
+                        ScriptPageCoordinator(router: router).start()
                     }
                 }
         }
