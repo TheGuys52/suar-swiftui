@@ -1,3 +1,4 @@
+import SwiftData
 import SwiftUI
 
 public struct ScriptPageView: View {
@@ -13,14 +14,14 @@ public struct ScriptPageView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.white)
-        .accessibilityRotor("Adegan", entries: {
-            ForEach(viewModel.lines.filter { $0.type == .title }) { line in
-                AccessibilityRotorEntry(line.content, id: line.id)
+        .accessibilityRotor(ScriptRotorType.scenes.rawValue, entries: {
+            ForEach(sceneBlocks) { block in
+                AccessibilityRotorEntry(block.content, id: block.id)
             }
         })
-        .accessibilityRotor("Tokoh", entries: {
-            ForEach(uniqueCharacterLines) { line in
-                AccessibilityRotorEntry(line.characterName ?? "", id: line.id)
+        .accessibilityRotor(ScriptRotorType.characters.rawValue, entries: {
+            ForEach(uniqueCharacterBlocks) { block in
+                AccessibilityRotorEntry(block.characterName ?? "", id: block.id)
             }
         })
     }
@@ -41,7 +42,7 @@ public struct ScriptPageView: View {
         if viewModel.isLoading {
             ProgressView("Memuat naskah...")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if viewModel.lines.isEmpty {
+        } else if viewModel.blocks.isEmpty {
             Text("Tidak ada konten di halaman ini.")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -54,10 +55,14 @@ public struct ScriptPageView: View {
         ScrollViewReaderContent(viewModel: viewModel)
     }
 
-    private var uniqueCharacterLines: [ScriptLine] {
+    private var sceneBlocks: [ScriptBlock] {
+        viewModel.blocks.filter { $0.blockType == .sceneHeader }
+    }
+
+    private var uniqueCharacterBlocks: [ScriptBlock] {
         var seen = Set<String>()
-        return viewModel.lines.filter { line in
-            guard let name = line.characterName, !name.isEmpty else { return false }
+        return viewModel.blocks.filter { block in
+            guard let name = block.characterName, !name.isEmpty else { return false }
             if seen.contains(name) { return false }
             seen.insert(name)
             return true
@@ -72,9 +77,9 @@ private struct ScrollViewReaderContent: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
-                    ForEach(viewModel.lines) { line in
-                        ScriptLineRowView(line: line)
-                            .id(line.id)
+                    ForEach(viewModel.blocks) { block in
+                        ScriptLineRowView(block: block)
+                            .id(block.id)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -83,12 +88,12 @@ private struct ScrollViewReaderContent: View {
             }
             .scrollIndicators(.hidden)
             .onChange(of: viewModel.currentPageNumber) { _, _ in
-                if let firstId = viewModel.lines.first?.id {
+                if let firstId = viewModel.blocks.first?.id {
                     proxy.scrollTo(firstId, anchor: .top)
                 }
             }
             .onAppear {
-                if let firstId = viewModel.lines.first?.id {
+                if let firstId = viewModel.blocks.first?.id {
                     proxy.scrollTo(firstId, anchor: .top)
                 }
             }
