@@ -37,8 +37,8 @@ public final class AppCoordinator: CoordinatorProtocol {
                                 .foregroundStyle(.secondary)
                         }
                         .padding()
-                    case .reader:
-                        ScriptPageCoordinator(router: router).start()
+                    case .reader(let scriptId):
+                        ScriptPageCoordinator(router: router, scriptId: scriptId).start()
                     }
                 }
         }

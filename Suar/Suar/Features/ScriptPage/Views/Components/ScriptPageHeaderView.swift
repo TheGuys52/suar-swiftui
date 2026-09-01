@@ -5,7 +5,6 @@ struct ScriptPageHeaderView: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            backButton
             titleText
             Spacer()
             pageIndicator
@@ -13,21 +12,6 @@ struct ScriptPageHeaderView: View {
         .padding(.horizontal)
         .padding(.vertical, 12)
         .background(Color.white)
-    }
-
-    private var backButton: some View {
-        Button {
-            viewModel.didTapBack()
-        } label: {
-            Image(systemName: "chevron.left")
-                .font(.title3)
-                .foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background(Color.themeRed)
-                .clipShape(Circle())
-        }
-        .accessibilityLabel("Kembali ke halaman sebelumnya")
-        .accessibilityHint("Ketuk untuk kembali")
     }
 
     private var titleText: some View {

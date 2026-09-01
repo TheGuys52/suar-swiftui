@@ -11,6 +11,10 @@ struct ScriptLineRowView: View {
             stageDirectionRow
         case .title:
             titleRow
+        case .character:
+            characterRow
+        case .transition:
+            transitionRow
         }
     }
 
@@ -72,6 +76,29 @@ struct ScriptLineRowView: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Judul. \(line.content)")
     }
+
+    // MARK: - Character
+
+    private var characterRow: some View {
+        Text(line.content)
+            .font(.headline)
+            .foregroundStyle(Color.themeRed)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Tokoh. \(line.content)")
+    }
+
+    // MARK: - Transition
+
+    private var transitionRow: some View {
+        Text(line.content)
+            .font(.caption)
+            .textCase(.uppercase)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Transisi. \(line.content)")
+    }
 }
 
 #Preview("Dialogue") {
@@ -117,6 +144,36 @@ struct ScriptLineRowView: View {
         ScriptLineRowView(line: ScriptLine(
             content: "BAB 1: Pertemuan",
             type: .title
+        ))
+    }
+    .padding()
+}
+
+#Preview("Character") {
+    VStack(spacing: 16) {
+        ScriptLineRowView(line: ScriptLine(
+            content: "PRIA",
+            type: .character
+        ))
+
+        ScriptLineRowView(line: ScriptLine(
+            content: "WANITA",
+            type: .character
+        ))
+    }
+    .padding()
+}
+
+#Preview("Transition") {
+    VStack(spacing: 16) {
+        ScriptLineRowView(line: ScriptLine(
+            content: "FADE IN:",
+            type: .transition
+        ))
+
+        ScriptLineRowView(line: ScriptLine(
+            content: "CUT TO:",
+            type: .transition
         ))
     }
     .padding()
