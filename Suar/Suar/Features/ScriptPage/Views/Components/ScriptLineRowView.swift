@@ -51,13 +51,20 @@ struct ScriptLineRowView: View {
     private var dialogueRow: some View {
         VStack(alignment: .leading, spacing: 4) {
             if let characterName = block.characterName {
-                Text(characterName.uppercased())
-                    .font(.headline)
-                    .foregroundStyle(Color.themeRed)
+                Text(characterName)
+                    .font(Font.custom("Courier", size: 20))
+                    .foregroundStyle(.primary)
+                    .bold()
+            }
+
+            if let cue = block.cueDescription {
+                Text(cue)
+                    .font(Font.custom("Courier", size: 15))
+                    .foregroundStyle(.secondary)
             }
 
             Text(block.content)
-                .font(.body)
+                .font(Font.custom("Courier", size: 18))
                 .foregroundStyle(.primary)
         }
         .frame(maxWidth: 280, alignment: .center)
@@ -90,8 +97,7 @@ struct ScriptLineRowView: View {
 
     private var stageDirectionRow: some View {
         Text(block.content)
-            .font(.body)
-            .italic()
+            .font(Font.custom("Courier", size: 18))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
@@ -101,10 +107,10 @@ struct ScriptLineRowView: View {
     // MARK: - Transition
 
     private var transitionRow: some View {
-        Text(block.content.uppercased())
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .trailing)
+        Text(block.content)
+            .font(Font.custom("Courier", size: 18))
+            .bold()
+            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Transisi. \(block.content)")
     }
