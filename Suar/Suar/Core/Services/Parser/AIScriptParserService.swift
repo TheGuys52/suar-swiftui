@@ -80,7 +80,7 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
         """
 
         let payload: [String: Any] = [
-            "model": "claude-opus-4-6",
+            "model": "claude-sonnet-4-6",
             "max_tokens": 100000,
             "system": systemPrompt,
             "messages": [
