@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ScriptLineRowView: View {
     let block: ScriptBlock
+    var searchText: String?
 
     var body: some View {
         switch block.blockType {
@@ -23,7 +24,7 @@ struct ScriptLineRowView: View {
     // MARK: - Scene Header
 
     private var sceneHeaderRow: some View {
-        Text(block.content)
+        highlightedText(block.content)
             .font(.headline)
             .bold()
             .foregroundStyle(Color.themeRed)
@@ -36,7 +37,7 @@ struct ScriptLineRowView: View {
     // MARK: - Character
 
     private var characterRow: some View {
-        Text(block.content.uppercased())
+        highlightedText(block.content.uppercased())
             .font(.subheadline)
             .bold()
             .foregroundStyle(Color.themeRed)
@@ -51,7 +52,7 @@ struct ScriptLineRowView: View {
     private var dialogueRow: some View {
         VStack(alignment: .leading, spacing: 4) {
             if let characterName = block.characterName {
-                Text(characterName)
+                highlightedText(characterName)
                     .font(Font.custom("Courier", size: 20))
                     .foregroundStyle(.primary)
                     .bold()
@@ -63,7 +64,7 @@ struct ScriptLineRowView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text(block.content)
+            highlightedText(block.content)
                 .font(Font.custom("Courier", size: 18))
                 .foregroundStyle(.primary)
         }
@@ -96,7 +97,7 @@ struct ScriptLineRowView: View {
     // MARK: - Stage Direction
 
     private var stageDirectionRow: some View {
-        Text(block.content)
+        highlightedText(block.content)
             .font(Font.custom("Courier", size: 18))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -107,12 +108,26 @@ struct ScriptLineRowView: View {
     // MARK: - Transition
 
     private var transitionRow: some View {
-        Text(block.content)
+        highlightedText(block.content)
             .font(Font.custom("Courier", size: 18))
             .bold()
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Transisi. \(block.content)")
+    }
+
+    // MARK: - Search Highlight
+    @ViewBuilder
+    private func highlightedText(_ text: String) -> some View {
+        if let query = searchText, !query.isEmpty,
+           text.localizedCaseInsensitiveContains(query) {
+            Text(text)
+                .padding(.vertical, 2)
+                .padding(.horizontal, 4)
+                .background(Color.yellow.opacity(0.4), in: RoundedRectangle(cornerRadius: 4))
+        } else {
+            Text(text)
+        }
     }
 }
 
