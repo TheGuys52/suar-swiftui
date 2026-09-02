@@ -23,31 +23,6 @@ struct HomeView: View {
         ZStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // MARK: - Header
-                    HStack {
-                        Text("Suar")
-                            .font(.largeTitle)
-                            .bold()
-                        Spacer()
-                        Button {
-                            if isSearchFocused {
-                                isSearchFocused = false
-                                hideKeyboard()
-                            } else {
-                                viewModel.didTapLibrary()
-                            }
-                        } label: {
-                            Image(systemName: "questionmark")
-                                .foregroundStyle(.white)
-                                .bold()
-                                .frame(width: 44, height: 44)
-                                .background(Color.themeRed)
-                                .clipShape(Circle())
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-                    
                     // MARK: - Sections
                     ContinueReadingSection(
                         scripts: viewModel.recentScripts,
@@ -82,6 +57,24 @@ struct HomeView: View {
                     }
             }
         }
+        .navigationTitle("Suar")
+        .toolbarTitleDisplayMode(.inlineLarge)
+        .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            if isSearchFocused {
+                                isSearchFocused = false
+                                hideKeyboard()
+                            } else {
+                                viewModel.didTapLibrary()
+                            }
+                        } label: {
+                            Image(systemName: "questionmark")
+                        }
+                        .tint(Color.themeRed)
+
+                    }
+                }
         .task {
             await viewModel.fetchRecentScripts()
             await viewModel.fetchAllScripts()

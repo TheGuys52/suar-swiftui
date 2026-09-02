@@ -87,7 +87,5 @@ struct ScriptRowView: View {
 }
 
 #Preview {
-    ScrollView {
         AllScriptList(scripts: [])
-    }
 }
