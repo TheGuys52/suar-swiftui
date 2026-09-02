@@ -27,7 +27,7 @@ public final class HomeViewModel {
     }
     
     private let ocrService: VisionOCRServiceProtocol?
-    private let parserService: ScriptParserServiceProtocol?
+    private let parserService: ScriptParserServiceProtocol
     
     public init(
         repository: ScriptRepositoryProtocol? = nil,
@@ -36,13 +36,13 @@ public final class HomeViewModel {
     ) {
         self.injectedRepository = repository
         self.ocrService = ocrService ?? DIContainer.shared.ocrService
-        self.parserService = parserService ?? DIContainer.shared.parserService
+        self.parserService = parserService ?? DIContainer.shared.scriptParserService
     }
     
     #if DEBUG
     /// Otomatis memproses dan menyimpan 'ruangtunggu.pdf' dari Bundle jika database masih kosong.
     public func seedSamplePDFIfNeeded() async {
-        guard let repository, let ocrService, let parserService else { return }
+        guard let repository, let ocrService else { return }
         
         do {
             let existingScripts = try await repository.fetchAllScripts()
@@ -142,7 +142,7 @@ public final class HomeViewModel {
     /// Menjalankan pipeline OCR + parsing + save. Progress di-update secara real-time (0-70% OCR, 70-90% parsing, 90-100% save).
     /// Pada sukses, menyimpan script dan menampilkan success alert. Pada gagal, menampilkan error message.
     public func processSelectedFile(url: URL) async {
-        guard let ocrService, let parserService, let repository else {
+        guard let ocrService, let repository else {
             errorMessage = "Layanan impor belum dikonfigurasi."
             return
         }

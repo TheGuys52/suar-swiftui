@@ -97,6 +97,8 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
+        print("[AI-Parser] Raw response: \(String(data: data, encoding: .utf8) ?? "nil")")
+
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
             throw URLError(.badServerResponse)
         }
@@ -119,7 +121,7 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
                 orderIndex: currentOrder,
                 blockType: blockType,
                 characterName: block.characterName,
-                content: block.content,
+                content: block.content ?? "",
                 cueDescription: block.cueDescription
             )
             scriptBlocks.append(scriptBlock)
@@ -132,14 +134,33 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
     private func decodeAIResponse(data: Data) throws -> [AIBlock] {
         struct AnthropicResponse: Decodable {
             struct Content: Decodable {
-                let text: String
+                let type: String
+                let text: String?
             }
             let content: [Content]
         }
 
         let response = try JSONDecoder().decode(AnthropicResponse.self, from: data)
-        guard let rawJsonString = response.content.first?.text,
-              let jsonData = rawJsonString.data(using: .utf8) else {
+
+        // Find the "text" block (skip "thinking" blocks)
+        guard let textBlock = response.content.first(where: { $0.type == "text" }),
+              let rawJsonString = textBlock.text else {
+            throw URLError(.cannotParseResponse)
+        }
+
+        // Strip markdown code fences: ```json ... ```
+        var jsonString = rawJsonString.trimmingCharacters(in: .whitespacesAndNewlines)
+        if jsonString.hasPrefix("```json") {
+            jsonString = String(jsonString.dropFirst(7))
+        } else if jsonString.hasPrefix("```") {
+            jsonString = String(jsonString.dropFirst(3))
+        }
+        if jsonString.hasSuffix("```") {
+            jsonString = String(jsonString.dropLast(3))
+        }
+        jsonString = jsonString.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let jsonData = jsonString.data(using: .utf8) else {
             throw URLError(.cannotParseResponse)
         }
 
@@ -151,5 +172,5 @@ private struct AIBlock: Decodable {
     let type: String
     let characterName: String?
     let cueDescription: String?
-    let content: String
+    let content: String?
 }
