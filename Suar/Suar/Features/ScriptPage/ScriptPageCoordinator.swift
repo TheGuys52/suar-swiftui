@@ -7,9 +7,9 @@ public final class ScriptPageCoordinator: CoordinatorProtocol {
     public var router: Router
     public let viewModel: ScriptPageViewModel
 
-    public init(router: Router) {
+    public init(router: Router, scriptId: UUID) {
         self.router = router
-        self.viewModel = ScriptPageViewModel()
+        self.viewModel = ScriptPageViewModel(scriptId: scriptId)
         configureBindings()
     }
 

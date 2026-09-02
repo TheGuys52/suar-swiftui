@@ -1,17 +1,49 @@
 import SwiftUI
 
 struct ScriptLineRowView: View {
-    let line: ScriptLine
+    let block: ScriptBlock
 
     var body: some View {
-        switch line.type {
+        switch block.blockType {
+        case .sceneHeader:
+            sceneHeaderRow
+        case .characterName:
+            characterRow
         case .dialogue:
             dialogueRow
-        case .description:
+        case .stageDirection:
             stageDirectionRow
-        case .title:
-            titleRow
+        case .parenthetical:
+            parentheticalRow
+        case .transition:
+            transitionRow
         }
+    }
+
+    // MARK: - Scene Header
+
+    private var sceneHeaderRow: some View {
+        Text(block.content)
+            .font(.headline)
+            .bold()
+            .foregroundStyle(Color.themeRed)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 12)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Adegan. \(block.content)")
+    }
+
+    // MARK: - Character
+
+    private var characterRow: some View {
+        Text(block.content.uppercased())
+            .font(.subheadline)
+            .bold()
+            .foregroundStyle(Color.themeRed)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 6)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Tokoh. \(block.content)")
     }
 
     // MARK: - Dialogue
@@ -36,18 +68,30 @@ struct ScriptLineRowView: View {
                 .font(Font.custom("Courier", size: 18))
                 .foregroundStyle(.primary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: 280, alignment: .center)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabelForDialogue)
     }
 
     private var accessibilityLabelForDialogue: String {
-        var label = line.characterName ?? ""
-        if let cue = line.cueDescription {
+        var label = block.characterName ?? ""
+        if let cue = block.cueDescription {
             label += ", \(cue)"
         }
-        label += ". \(line.content)"
+        label += ". \(block.content)"
         return label
+    }
+
+    // MARK: - Parenthetical
+
+    private var parentheticalRow: some View {
+        Text(block.content)
+            .font(.caption)
+            .italic()
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: 280, alignment: .center)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Keterangan. \(block.content)")
     }
 
     // MARK: - Stage Direction
@@ -58,10 +102,10 @@ struct ScriptLineRowView: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Arah panggung. \(line.content)")
+            .accessibilityLabel("Arah panggung. \(block.content)")
     }
 
-    // MARK: - Title
+    // MARK: - Transition
 
     private var titleRow: some View {
         Text(line.content)
@@ -69,23 +113,59 @@ struct ScriptLineRowView: View {
             .bold()
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Judul. \(line.content)")
+            .accessibilityLabel("Transisi. \(block.content)")
     }
+}
+
+#Preview("Scene Header") {
+    VStack(spacing: 16) {
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 0,
+            blockType: .sceneHeader,
+            content: "AKT I"
+        ))
+
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 1,
+            blockType: .sceneHeader,
+            content: "BAB 1: Pertemuan"
+        ))
+    }
+    .padding()
+}
+
+#Preview("Character") {
+    VStack(spacing: 16) {
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 0,
+            blockType: .characterName,
+            content: "HERMAN"
+        ))
+
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 1,
+            blockType: .characterName,
+            content: "MAYA"
+        ))
+    }
+    .padding()
 }
 
 #Preview("Dialogue") {
     VStack(spacing: 16) {
-        ScriptLineRowView(line: ScriptLine(
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 0,
+            blockType: .dialogue,
             characterName: "Herman",
-            cueDescription: "sedih",
             content: "Kau tahu, aku sudah menunggumu sejak lama.",
-            type: .dialogue
+            cueDescription: "sedih"
         ))
 
-        ScriptLineRowView(line: ScriptLine(
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 1,
+            blockType: .dialogue,
             characterName: "Maya",
-            content: "Maaf, aku tidak bisa datang lebih awal.",
-            type: .dialogue
+            content: "Maaf, aku tidak bisa datang lebih awal."
         ))
     }
     .padding()
@@ -93,29 +173,33 @@ struct ScriptLineRowView: View {
 
 #Preview("Stage Direction") {
     VStack(spacing: 16) {
-        ScriptLineRowView(line: ScriptLine(
-            content: "Herman masuk ke ruangan dengan langkah berat.",
-            type: .description
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 0,
+            blockType: .stageDirection,
+            content: "Herman masuk ke ruangan dengan langkah berat."
         ))
 
-        ScriptLineRowView(line: ScriptLine(
-            content: "Lampu redup, suasana sunyi.",
-            type: .description
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 1,
+            blockType: .stageDirection,
+            content: "Lampu redup, suasana sunyi."
         ))
     }
     .padding()
 }
 
-#Preview("Title") {
+#Preview("Transition") {
     VStack(spacing: 16) {
-        ScriptLineRowView(line: ScriptLine(
-            content: "AKT I",
-            type: .title
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 0,
+            blockType: .transition,
+            content: "FADE IN:"
         ))
 
-        ScriptLineRowView(line: ScriptLine(
-            content: "BAB 1: Pertemuan",
-            type: .title
+        ScriptLineRowView(block: ScriptBlock(
+            orderIndex: 1,
+            blockType: .transition,
+            content: "CUT TO:"
         ))
     }
     .padding()
