@@ -50,14 +50,22 @@ struct ScriptLineRowView: View {
 
     private var dialogueRow: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if let characterName = block.characterName {
-                Text(characterName.uppercased())
-                    .font(.headline)
-                    .foregroundStyle(Color.themeRed)
+            if let characterName = line.characterName {
+                Text(characterName)
+                    .font(Font.custom("Courier", size: 20))
+                    .foregroundStyle(.primary)
+                    .bold()
+                
             }
 
-            Text(block.content)
-                .font(.body)
+            if let cue = line.cueDescription {
+                Text(cue)
+                    .font(Font.custom("Courier", size: 15))
+                    .foregroundStyle(.secondary)
+            }
+
+            Text(line.content)
+                .font(Font.custom("Courier", size: 18))
                 .foregroundStyle(.primary)
         }
         .frame(maxWidth: 280, alignment: .center)
@@ -89,9 +97,8 @@ struct ScriptLineRowView: View {
     // MARK: - Stage Direction
 
     private var stageDirectionRow: some View {
-        Text(block.content)
-            .font(.body)
-            .italic()
+        Text(line.content)
+            .font(Font.custom("Courier", size: 18))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
@@ -100,11 +107,11 @@ struct ScriptLineRowView: View {
 
     // MARK: - Transition
 
-    private var transitionRow: some View {
-        Text(block.content.uppercased())
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .trailing)
+    private var titleRow: some View {
+        Text(line.content)
+            .font(Font.custom("Courier", size: 18))
+            .bold()
+            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Transisi. \(block.content)")
     }

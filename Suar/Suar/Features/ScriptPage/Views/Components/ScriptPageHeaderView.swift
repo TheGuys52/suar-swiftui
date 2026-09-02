@@ -5,6 +5,7 @@ struct ScriptPageHeaderView: View {
 
     var body: some View {
         HStack(spacing: 16) {
+            Spacer()
             titleText
             Spacer()
             pageIndicator
@@ -13,19 +14,19 @@ struct ScriptPageHeaderView: View {
         .padding(.vertical, 12)
         .background(Color.white)
     }
-
+    
     private var titleText: some View {
         Text(viewModel.scriptTitle)
-            .font(.title2)
+            .font(Font.custom("Courier", size: 24))
             .bold()
-            .foregroundStyle(Color.themeRed)
             .lineLimit(1)
     }
 
     private var pageIndicator: some View {
         Text(pageIndicatorText)
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .font(Font.custom("Courier", size: 20))
+            .foregroundStyle(.primary)
+            .bold()
             .accessibilityLabel(
                 "Halaman \(viewModel.currentPageNumber) dari \(viewModel.totalPages)"
             )

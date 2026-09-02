@@ -20,6 +20,7 @@ targets:
     destinations: [iPhone] # <-- Membatasi target hanya untuk iPhone (tanpa iPad)
     sources:
       - path: Suar/Suar
+      - path: Suar/Suar/SupportingFiles/Font/CourierPrime-Regular.ttf
     info:
       path: Suar/Suar/Info.plist
       properties:
