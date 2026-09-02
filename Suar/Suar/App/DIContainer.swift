@@ -1,4 +1,3 @@
-//
 //  DIContainer.swift
 //  Suar
 //
@@ -14,6 +13,10 @@ public final class DIContainer: @unchecked Sendable {
     public var scriptRepository: ScriptRepositoryProtocol?
     public lazy var ocrService: VisionOCRServiceProtocol = VisionOCRService()
     public lazy var parserService: ScriptParserServiceProtocol = ScriptParserService()
+    lazy var scriptParserService: ScriptParserServiceProtocol = {
+        let apiKey = Bundle.main.object(forInfoDictionaryKey: "LLM_OLAGON_API_KEY") as? String ?? ""
+        return AIScriptParserService(apiKey: apiKey)
+    }()
 
     private init() {}
 
