@@ -4,6 +4,7 @@ import SwiftUI
 public struct ScriptPageView: View {
     @Bindable var viewModel: ScriptPageViewModel
     @FocusState private var searchFieldFocused: Bool
+    @State private var showDeleteConfirmation = false
 
     public init(viewModel: ScriptPageViewModel) {
         self.viewModel = viewModel
@@ -48,7 +49,7 @@ public struct ScriptPageView: View {
                         }
                         Divider()
                         Button(role: .destructive) {
-                            viewModel.onDelete?()
+                            showDeleteConfirmation = true
                         } label: {
                             Label("Hapus", systemImage: "trash")
                         }
@@ -72,6 +73,17 @@ public struct ScriptPageView: View {
         .overlay(alignment: .bottom) {
             ScriptPageNavigationView(viewModel: viewModel)
                 .padding(.bottom, 16)
+        }
+        .alert("Hapus Naskah", isPresented: $showDeleteConfirmation) {
+            Button("Batal", role: .cancel) {}
+            Button("Hapus", role: .destructive) {
+                Task {
+                    await viewModel.performDelete()
+                    viewModel.didTapBack()
+                }
+            }
+        } message: {
+            Text("Naskah ini akan dihapus secara permanen. Apakah Anda yakin?")
         }
     }
 

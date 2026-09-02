@@ -13,6 +13,7 @@ public final class ScriptPageViewModel {
     public var onEdit: (() -> Void)?
     public var onDelete: (() -> Void)?
     public private(set) var currentScript: Script?
+    private var scriptId: UUID?
     public var isLoading: Bool = false
     public var errorMessage: String?
 
@@ -103,6 +104,11 @@ public final class ScriptPageViewModel {
         currentSearchIndex = 0
     }
 
+    public func performDelete() async {
+        guard let id = scriptId else { return }
+        try? await repository?.delete(scriptId: id)
+    }
+
     private func navigateToCurrentSearchResult() {
         guard currentSearchIndex < searchResults.count else { return }
         let result = searchResults[currentSearchIndex]
@@ -127,6 +133,7 @@ public final class ScriptPageViewModel {
             }
 
             self.currentScript = script
+            self.scriptId = script.id
             self.scriptTitle = script.title
             self.totalPages = script.pages.count
             self.currentPageNumber = script.lastReadPage
