@@ -6,18 +6,36 @@ struct HomeView: View {
     @Bindable var viewModel: HomeViewModel
     @Binding var isShowingFileImporter: Bool
     @State private var searchText = ""
+    @FocusState private var isSearchFocused: Bool
+    
+    private var filteredScripts: [Script] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if query.isEmpty {
+            return viewModel.allScripts
+        } else {
+            return viewModel.allScripts.filter {
+                $0.title.localizedCaseInsensitiveContains(query)
+            }
+        }
+    }
     
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack {
             ScrollView {
                 VStack(spacing: 24) {
+                    // MARK: - Header
                     HStack {
                         Text("Suar")
                             .font(.largeTitle)
                             .bold()
                         Spacer()
                         Button {
-                            viewModel.didTapLibrary()
+                            if isSearchFocused {
+                                isSearchFocused = false
+                                hideKeyboard()
+                            } else {
+                                viewModel.didTapLibrary()
+                            }
                         } label: {
                             Image(systemName: "questionmark")
                                 .foregroundStyle(.white)
@@ -29,43 +47,45 @@ struct HomeView: View {
                     }
                     .padding(.horizontal)
                     .padding(.top, 16)
-                    ContinueReadingSection()
-                    VStack(spacing: 16) {
-                        AllScriptsSection()
-                    }
                     
-                    Spacer().frame(height: 100)
+                    // MARK: - Sections
+                    ContinueReadingSection(
+                        scripts: viewModel.recentScripts,
+                        onSelectScript: { script in
+                            handleScriptSelection(script)
+                        }
+                    )
+                    
+                    AllScriptsSection(
+                        scripts: filteredScripts,
+                        onSelectScript: { script in
+                            handleScriptSelection(script)
+                        }
+                    )
                 }
+                .padding(.bottom, 12)
             }
-            .scrollIndicators(.hidden)
-            HStack(spacing: 16) {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.gray)
-                    TextField("Search", text: $searchText)
-                    Image(systemName: "mic")
-                        .foregroundStyle(.gray)
-                }
-                .padding()
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 30))
-                Button {
-                    viewModel.didTapImport()
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .foregroundStyle(.white)
-                        .bold()
-                        .frame(width: 56, height: 56)
-                        .background(Color.themeRed)
-                        .clipShape(Circle())
-                }
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom) {
+                bottomSearchBar
             }
-            .padding(.horizontal)
-            .padding(.bottom, 8)
+            
+            // Full-screen overlay to dismiss keyboard on background tap
+            if isSearchFocused {
+                Color.black.opacity(0.001)
+                    .ignoresSafeArea()
+                    .onTapGesture {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            isSearchFocused = false
+                            hideKeyboard()
+                        }
+                    }
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea(.keyboard)
+        .task {
+            await viewModel.fetchRecentScripts()
+            await viewModel.fetchAllScripts()
+        }
         .fileImporter(
             isPresented: $isShowingFileImporter,
             allowedContentTypes: [.pdf, .jpeg, .png, .image],
@@ -104,9 +124,60 @@ struct HomeView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .onTapGesture {
+    }
+    
+    // MARK: - Helpers & Subviews
+    
+    private func handleScriptSelection(_ script: Script) {
+        if isSearchFocused {
+            isSearchFocused = false
             hideKeyboard()
+        } else {
+            viewModel.didTapScript(id: script.id)
         }
+    }
+    
+    private var bottomSearchBar: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.gray)
+                
+                TextField("Search", text: $searchText)
+                    .focused($isSearchFocused)
+                    .autocorrectionDisabled()
+                
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.gray)
+                    }
+                } else {
+                    Image(systemName: "mic")
+                        .foregroundStyle(.gray)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(.ultraThinMaterial)
+            .clipShape(Capsule())
+            
+            Button {
+                viewModel.didTapImport()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2)
+                    .foregroundStyle(.white)
+                    .bold()
+                    .frame(width: 54, height: 54)
+                    .background(Color.themeRed)
+                    .clipShape(Circle())
+            }
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
     }
 }
 

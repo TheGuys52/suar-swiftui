@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ReadingCard: View {
-    @State private var progress = 0.5
+    let script: Script
     
     var body: some View {
         VStack {
@@ -20,20 +20,21 @@ struct ReadingCard: View {
                     .background(Color.themeRed)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                 
-                Text("Lorem Ipsum dolor sit")
-                    .font(.title)
+                Text(script.title)
+                    .font(.headline)
                     .bold()
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            ProgressView(value: progress)
+            
+            ProgressView(value: progressValue)
                 .tint(Color.themeRed)
             HStack {
-                Text("Bab 11 dari 100")
+                Text(pageText)
                     .font(.caption)
                 Spacer()
-                Text("11%")
+                Text(progressText)
                     .font(.caption)
             }
             .padding(.top)
@@ -43,10 +44,29 @@ struct ReadingCard: View {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.themeRed, lineWidth: 2)
         }
-        .frame(maxWidth: 300)
+        .frame(width: 300)
+    }
+    
+    private var progressValue: Double {
+        guard script.pageCount > 0 else { return 0 }
+        return min(Double(script.lastReadPage) / Double(script.pageCount), 1)
+    }
+    
+    private var pageText: String {
+        guard script.pageCount > 0 else {
+            return "Baru diimpor"
+        }
+        return "Bab \(script.lastReadPage) dari \(script.pageCount)"
+    }
+    
+    private var progressText: String {
+        guard script.pageCount > 0 else {
+            return "0%"
+        }
+        return "\(Int((progressValue * 100).rounded()))%"
     }
 }
 
 #Preview {
-    ReadingCard()
+    ReadingCard(script: Script(title: "Ruang Tunggu"))
 }
