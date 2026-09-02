@@ -57,7 +57,8 @@ public final class HomeViewModel {
             let script = try await parserService.parseScript(
                 rawPagesText: rawPagesText,
                 scriptTitle: pdfURL.deletingPathExtension().lastPathComponent,
-                sourceFileName: pdfURL.lastPathComponent
+                sourceFileName: pdfURL.lastPathComponent,
+                onProgress: nil
             )
             
             try await repository.save(script: script)
@@ -157,6 +158,7 @@ public final class HomeViewModel {
         }
         
         do {
+            // Step 1: Vision OCR (0.0 - 0.70)
             let rawPagesText = try await ocrService.extractText(from: url) { [weak self] ocrProgress in
                 Task { @MainActor in
                     self?.progressPercentage = ocrProgress * 0.7
@@ -164,6 +166,7 @@ public final class HomeViewModel {
                 }
             }
             
+            // Step 2: Parsing naskah (0.70 - 0.90)
             progressStatusMessage = "Menganalisis struktur naskah..."
             progressPercentage = 0.7
             
@@ -171,8 +174,15 @@ public final class HomeViewModel {
                 rawPagesText: rawPagesText,
                 scriptTitle: url.deletingPathExtension().lastPathComponent,
                 sourceFileName: url.lastPathComponent
-            )
+            ) { [weak self] currentPage, totalPages in
+                Task { @MainActor in
+                    let parseRatio = Double(currentPage) / Double(totalPages)
+                    self?.progressPercentage = 0.7 + (parseRatio * 0.20)
+                    self?.progressStatusMessage = "Menganalisis struktur naskah (halaman \(currentPage)/\(totalPages))..."
+                }
+            }
             
+            // Step 3: Simpan naskah ke repository (0.90 - 1.0)
             progressStatusMessage = "Menyimpan naskah..."
             progressPercentage = 0.9
             

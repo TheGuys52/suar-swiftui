@@ -14,14 +14,16 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
     public func parseScript(
         rawPagesText: [Int: String],
         scriptTitle: String,
-        sourceFileName: String
+        sourceFileName: String,
+        onProgress: ((_ currentPage: Int, _ totalPages: Int) -> Void)? = nil
     ) async throws -> Script {
         var allPages: [ScriptPage] = []
         var globalBlockOrder = 1
         
         let sortedPageNumbers = rawPagesText.keys.sorted()
+        let totalPages = sortedPageNumbers.count
         
-        for pageNum in sortedPageNumbers {
+        for (index, pageNum) in sortedPageNumbers.enumerated() {
             guard let pageContent = rawPagesText[pageNum] else { continue }
             
             let (parsedBlocks, nextOrder) = parsePageContent(
@@ -37,12 +39,15 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
                 blocks: parsedBlocks
             )
             allPages.append(scriptPage)
+            
+            // Panggil callback progress setiap halaman selesai diproses
+            onProgress?(index + 1, totalPages)
         }
         
         return Script(
             title: scriptTitle,
             lastReadPage: 1,
-            pageCount: sortedPageNumbers.count,
+            pageCount: totalPages,
             sourceFileName: sourceFileName,
             pages: allPages
         )
@@ -151,11 +156,9 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
     private func normalizeAndMergeLines(_ rawLines: [String]) -> [String] {
         var cleaned: [String] = []
         
-        // Step A: Cleaning noise & pipe symbols
         for line in rawLines {
             var trimmed = line.trimmingCharacters(in: .whitespaces)
             
-            // Clean table/PDF vertical bars
             if trimmed.hasPrefix("|") {
                 trimmed = String(trimmed.dropFirst()).trimmingCharacters(in: .whitespaces)
             }
@@ -163,7 +166,6 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
                 trimmed = trimmed.replacingOccurrences(of: "| :", with: ":")
             }
             
-            // Filter noise header/footer
             let noisePattern = "Lakon Ruang Tunggu.*"
             let range = NSRange(location: 0, length: trimmed.utf16.count)
             if let regex = try? NSRegularExpression(pattern: noisePattern, options: .caseInsensitive),
@@ -176,7 +178,6 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             }
         }
         
-        // Step B: Merge split dialogue and two-column character/dialogue pairs
         var result: [String] = []
         var characterQueue: [String] = []
 
@@ -191,14 +192,9 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             } else if isStandaloneCharacterName(line) {
                 characterQueue.append(line)
             } else {
-                // Non-character content: flush queued character names and pair
-                // the most recent one with this line (two-column layout: char on left,
-                // dialogue on right, read as separate lines after Y-X sort).
                 while !characterQueue.isEmpty {
                     result.append(characterQueue.removeFirst())
                 }
-                // If the previous result was a dialogue line (ends without :), merge
-                // this line as continuation.
                 result.append(line)
             }
         }
@@ -207,30 +203,22 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             result.append(characterQueue.removeFirst())
         }
 
-        // Step C: Two-column post-pass — pair orphaned character names with following
-        // dialogue lines that don't already have a colon. E.g.:
-        //   ["44. PRIA", "(berusaha...)", "Ayo, ikut aku berdoa."]
-        // becomes:
-        //   ["44. PRIA : (berusaha...)", "44. PRIA : Ayo, ikut aku berdoa."]
         var postResult: [String] = []
         var i = 0
         while i < result.count {
             let line = result[i]
             if isStandaloneCharacterName(line) {
-                // Look ahead for the next non-character-name line to pair with.
                 var merged = false
                 for j in (i + 1)..<result.count {
                     let nextLine = result[j]
                     if isStandaloneCharacterName(nextLine) {
-                        break // Stop at next character — don't steal its dialogue
+                        break
                     }
-                    // Don't merge if next line is already a complete dialogue entry.
                     if matchCharacterAndDialogue(nextLine) != nil {
                         break
-                    }   
-                    // Merge character name with the first non-character line we find.
+                    }
                     postResult.append("\(line) : \(nextLine)")
-                    result[j] = "" // mark as consumed
+                    result[j] = ""
                     merged = true
                     break
                 }
@@ -274,10 +262,8 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             var character = nsString.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespaces)
             let dialogue = nsString.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
             
-            // Normalisasi nama tokoh (contoh: "1. PRIA" -> "PRIA")
             character = character.replacingOccurrences(of: "^\\d+\\.\\s*", with: "", options: .regularExpression)
             
-            // Validasi: Panjang nama tokoh maks 25 karakter & maks 4 kata (mencegah narasi ALL CAPS terdeteksi tokoh)
             if character.count <= 25 && character.components(separatedBy: .whitespaces).count <= 4 {
                 return (character, dialogue)
             }

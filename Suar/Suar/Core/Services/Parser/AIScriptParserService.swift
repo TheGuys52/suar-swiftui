@@ -19,15 +19,20 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
     public func parseScript(
         rawPagesText: [Int: String],
         scriptTitle: String,
-        sourceFileName: String
+        sourceFileName: String,
+        onProgress: ((_ currentPage: Int, _ totalPages: Int) -> Void)? = nil
     ) async throws -> Script {
         var allPages: [ScriptPage] = []
         var globalBlockOrder = 1
         
         let sortedPageNumbers = rawPagesText.keys.sorted()
+        let totalPages = sortedPageNumbers.count
 
-        for pageNum in sortedPageNumbers {
-            guard let pageContent = rawPagesText[pageNum], !pageContent.isEmpty else { continue }
+        for (index, pageNum) in sortedPageNumbers.enumerated() {
+            guard let pageContent = rawPagesText[pageNum], !pageContent.isEmpty else {
+                onProgress?(index + 1, totalPages)
+                continue
+            }
 
             let (parsedBlocks, nextOrder) = try await parsePageContent(
                 pageContent,
@@ -41,18 +46,20 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
                 blocks: parsedBlocks
             )
             allPages.append(scriptPage)
+
+            // Callback progress per halaman
+            onProgress?(index + 1, totalPages)
         }
 
         return Script(
             title: scriptTitle,
             lastReadPage: 1,
-            pageCount: sortedPageNumbers.count,
+            pageCount: totalPages,
             sourceFileName: sourceFileName,
             pages: allPages
         )
     }
 
-    // MARK: - API Call & Page Parsing
     private func parsePageContent(
         _ content: String,
         startingOrder: Int
