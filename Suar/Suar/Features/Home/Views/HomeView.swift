@@ -20,63 +20,57 @@ struct HomeView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            
-            VStack(spacing: 24) {
-                HStack {
-                    Text("Suar")
-                        .font(.largeTitle)
-                        .bold()
-                    Spacer()
-                    Button {
-                        if isSearchFocused {
-                            isSearchFocused = false
-                            hideKeyboard()
-                        } else {
-                            viewModel.didTapLibrary()
-                        }
-                    } label: {
-                        Image(systemName: "questionmark")
-                            .foregroundStyle(.white)
+        ZStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // MARK: - Header
+                    HStack {
+                        Text("Suar")
+                            .font(.largeTitle)
                             .bold()
-                            .frame(width: 44, height: 44)
-                            .background(Color.themeRed)
-                            .clipShape(Circle())
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, 16)
-                
-                ContinueReadingSection(
-                    scripts: viewModel.recentScripts,
-                    onSelectScript: { script in
-                        if isSearchFocused {
-                            isSearchFocused = false
-                            hideKeyboard()
-                        } else {
-                            viewModel.didTapScript(id: script.id)
-                        }
-                    }
-                )
-                
-                VStack(spacing: 16) {
-                    AllScriptsSection(
-                        scripts: filteredScripts,
-                        onSelectScript: { script in
+                        Spacer()
+                        Button {
                             if isSearchFocused {
                                 isSearchFocused = false
                                 hideKeyboard()
                             } else {
-                                viewModel.didTapScript(id: script.id)
+                                viewModel.didTapLibrary()
                             }
+                        } label: {
+                            Image(systemName: "questionmark")
+                                .foregroundStyle(.white)
+                                .bold()
+                                .frame(width: 44, height: 44)
+                                .background(Color.themeRed)
+                                .clipShape(Circle())
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 16)
+                    
+                    // MARK: - Sections
+                    ContinueReadingSection(
+                        scripts: viewModel.recentScripts,
+                        onSelectScript: { script in
+                            handleScriptSelection(script)
+                        }
+                    )
+                    
+                    AllScriptsSection(
+                        scripts: filteredScripts,
+                        onSelectScript: { script in
+                            handleScriptSelection(script)
                         }
                     )
                 }
-                
-                Spacer().frame(height: 100)
+                .padding(.bottom, 12)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom) {
+                bottomSearchBar
             }
             
-            // Full-screen overlay to absorb taps when keyboard is open (dismisses keyboard without navigating)
+            // Full-screen overlay to dismiss keyboard on background tap
             if isSearchFocused {
                 Color.black.opacity(0.001)
                     .ignoresSafeArea()
@@ -87,49 +81,7 @@ struct HomeView: View {
                         }
                     }
             }
-            
-            HStack(spacing: 12) {
-                HStack(spacing: 8) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.gray)
-                    
-                    TextField("Search", text: $searchText)
-                        .focused($isSearchFocused)
-                        .autocorrectionDisabled()
-                    
-                    if !searchText.isEmpty {
-                        Button {
-                            searchText = ""
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.gray)
-                        }
-                    } else {
-                        Image(systemName: "mic")
-                            .foregroundStyle(.gray)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .background(.ultraThinMaterial)
-                .clipShape(Capsule())
-                
-                Button {
-                    viewModel.didTapImport()
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.title2)
-                        .foregroundStyle(.white)
-                        .bold()
-                        .frame(width: 54, height: 54)
-                        .background(Color.themeRed)
-                        .clipShape(Circle())
-                }
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 8)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
             await viewModel.fetchRecentScripts()
             await viewModel.fetchAllScripts()
@@ -172,9 +124,60 @@ struct HomeView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .onTapGesture {
+    }
+    
+    // MARK: - Helpers & Subviews
+    
+    private func handleScriptSelection(_ script: Script) {
+        if isSearchFocused {
+            isSearchFocused = false
             hideKeyboard()
+        } else {
+            viewModel.didTapScript(id: script.id)
         }
+    }
+    
+    private var bottomSearchBar: some View {
+        HStack(spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.gray)
+                
+                TextField("Search", text: $searchText)
+                    .focused($isSearchFocused)
+                    .autocorrectionDisabled()
+                
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.gray)
+                    }
+                } else {
+                    Image(systemName: "mic")
+                        .foregroundStyle(.gray)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(.ultraThinMaterial)
+            .clipShape(Capsule())
+            
+            Button {
+                viewModel.didTapImport()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title2)
+                    .foregroundStyle(.white)
+                    .bold()
+                    .frame(width: 54, height: 54)
+                    .background(Color.themeRed)
+                    .clipShape(Circle())
+            }
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 8)
     }
 }
 
