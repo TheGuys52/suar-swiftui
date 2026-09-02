@@ -9,45 +9,43 @@ struct HomeView: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
-            ScrollView {
-                VStack(spacing: 24) {
-                    HStack {
-                        Text("Suar")
-                            .font(.largeTitle)
+            
+            VStack(spacing: 24) {
+                HStack {
+                    Text("Suar")
+                        .font(.largeTitle)
+                        .bold()
+                    Spacer()
+                    Button {
+                        viewModel.didTapLibrary()
+                    } label: {
+                        Image(systemName: "questionmark")
+                            .foregroundStyle(.white)
                             .bold()
-                        Spacer()
-                        Button {
-                            viewModel.didTapLibrary()
-                        } label: {
-                            Image(systemName: "questionmark")
-                                .foregroundStyle(.white)
-                                .bold()
-                                .frame(width: 44, height: 44)
-                                .background(Color.themeRed)
-                                .clipShape(Circle())
-                        }
+                            .frame(width: 44, height: 44)
+                            .background(Color.themeRed)
+                            .clipShape(Circle())
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 16)
-                    ContinueReadingSection(
-                        scripts: viewModel.recentScripts,
+                }
+                .padding(.horizontal)
+                .padding(.top, 16)
+                ContinueReadingSection(
+                    scripts: viewModel.recentScripts,
+                    onSelectScript: { script in
+                        viewModel.didTapScript(id: script.id)
+                    }
+                )
+                VStack(spacing: 16) {
+                    AllScriptsSection(
+                        scripts: viewModel.allScripts,
                         onSelectScript: { script in
                             viewModel.didTapScript(id: script.id)
                         }
                     )
-                    VStack(spacing: 16) {
-                        AllScriptsSection(
-                            scripts: viewModel.allScripts,
-                            onSelectScript: { script in
-                                viewModel.didTapScript(id: script.id)
-                            }
-                        )
-                    }
-                    
-                    Spacer().frame(height: 100)
                 }
+                
+                Spacer().frame(height: 100)
             }
-            .scrollIndicators(.hidden)
             HStack(spacing: 16) {
                 HStack {
                     Image(systemName: "magnifyingglass")
