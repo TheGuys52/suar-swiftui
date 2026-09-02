@@ -176,10 +176,10 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             }
         }
         
-        // Step B: Merge split character header & dialogue lines
+        // Step B: Merge split dialogue and two-column character/dialogue pairs
         var result: [String] = []
         var characterQueue: [String] = []
-        
+
         for line in cleaned {
             if line.hasPrefix(":") {
                 if !characterQueue.isEmpty {
@@ -191,19 +191,59 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             } else if isStandaloneCharacterName(line) {
                 characterQueue.append(line)
             } else {
-                // If there are leftover queued characters without dialogues
+                // Non-character content: flush queued character names and pair
+                // the most recent one with this line (two-column layout: char on left,
+                // dialogue on right, read as separate lines after Y-X sort).
                 while !characterQueue.isEmpty {
                     result.append(characterQueue.removeFirst())
                 }
+                // If the previous result was a dialogue line (ends without :), merge
+                // this line as continuation.
                 result.append(line)
             }
         }
-        
+
         while !characterQueue.isEmpty {
             result.append(characterQueue.removeFirst())
         }
-        
-        return result
+
+        // Step C: Two-column post-pass — pair orphaned character names with following
+        // dialogue lines that don't already have a colon. E.g.:
+        //   ["44. PRIA", "(berusaha...)", "Ayo, ikut aku berdoa."]
+        // becomes:
+        //   ["44. PRIA : (berusaha...)", "44. PRIA : Ayo, ikut aku berdoa."]
+        var postResult: [String] = []
+        var i = 0
+        while i < result.count {
+            let line = result[i]
+            if isStandaloneCharacterName(line) {
+                // Look ahead for the next non-character-name line to pair with.
+                var merged = false
+                for j in (i + 1)..<result.count {
+                    let nextLine = result[j]
+                    if isStandaloneCharacterName(nextLine) {
+                        break // Stop at next character — don't steal its dialogue
+                    }
+                    // Don't merge if next line is already a complete dialogue entry.
+                    if matchCharacterAndDialogue(nextLine) != nil {
+                        break
+                    }   
+                    // Merge character name with the first non-character line we find.
+                    postResult.append("\(line) : \(nextLine)")
+                    result[j] = "" // mark as consumed
+                    merged = true
+                    break
+                }
+                if !merged {
+                    postResult.append(line)
+                }
+            } else {
+                postResult.append(line)
+            }
+            i += 1
+        }
+
+        return postResult.filter { !$0.isEmpty }
     }
     
     private func isStandaloneCharacterName(_ line: String) -> Bool {
