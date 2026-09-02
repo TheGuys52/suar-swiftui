@@ -90,16 +90,15 @@ struct AllScriptsSection: View {
             }
             .padding(.horizontal)
             
-            ScrollView {
-                AllScriptList(
-                    scripts: sortedScripts,
-                    onSelectScript: onSelectScript
-                )
-            }
+            AllScriptList(
+                scripts: sortedScripts,
+                onSelectScript: onSelectScript
+            )
+            
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-
+    
     private var sortedScripts: [Script] {
         switch sortOption {
         case .newest:

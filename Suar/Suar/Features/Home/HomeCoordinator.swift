@@ -18,10 +18,12 @@ public final class HomeCoordinator: CoordinatorProtocol {
     public func start() -> some View {
         @Bindable var router = router
         @Bindable var coordinator = self
-        HomeView(
-            viewModel: viewModel,
-            isShowingFileImporter: $coordinator.isPresentingImportPicker
-        )
+        NavigationStack {
+            HomeView(
+                viewModel: viewModel,
+                isShowingFileImporter: $coordinator.isPresentingImportPicker
+            )
+        }
     }
     
     private func configureBindings() {
