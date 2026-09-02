@@ -38,8 +38,8 @@ targets:
         TARGETED_DEVICE_FAMILY: "1" # <-- 1 = iPhone saja
         CODE_SIGN_ENTITLEMENTS: Suar/Suar/Suar.entitlements
     configFiles:
-      Debug: Suar/Suar/SupportingFiles/Config/ConfigExample.xcconfig
-      Release: Suar/Suar/SupportingFiles/Config/ConfigExample.xcconfig
+      Debug: Suar/Suar/SupportingFiles/Config/Config.xcconfig
+      Release: Suar/Suar/SupportingFiles/Config/Config.xcconfig
     dependencies:
       - package: Pulse
         product: Pulse

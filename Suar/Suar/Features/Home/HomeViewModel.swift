@@ -27,7 +27,7 @@ public final class HomeViewModel {
     }
     
     private let ocrService: VisionOCRServiceProtocol?
-    private let parserService: ScriptParserServiceProtocol?
+    private let parserService: ScriptParserServiceProtocol
     
     public init(
         repository: ScriptRepositoryProtocol? = nil,
@@ -36,8 +36,38 @@ public final class HomeViewModel {
     ) {
         self.injectedRepository = repository
         self.ocrService = ocrService ?? DIContainer.shared.ocrService
-        self.parserService = parserService ?? DIContainer.shared.parserService
+        self.parserService = parserService ?? DIContainer.shared.scriptParserService
     }
+    
+    #if DEBUG
+    /// Otomatis memproses dan menyimpan 'ruangtunggu.pdf' dari Bundle jika database masih kosong.
+    public func seedSamplePDFIfNeeded() async {
+        guard let repository, let ocrService else { return }
+        
+        do {
+            let existingScripts = try await repository.fetchAllScripts()
+            guard existingScripts.isEmpty else { return }
+            
+            guard let pdfURL = Bundle.main.url(forResource: "ruangtunggu", withExtension: "pdf") else {
+                print("[Auto-Seed] File 'ruangtunggu.pdf' tidak ditemukan di Bundle.")
+                return
+            }
+            
+            let rawPagesText = try await ocrService.extractText(from: pdfURL) { _ in }
+            let script = try await parserService.parseScript(
+                rawPagesText: rawPagesText,
+                scriptTitle: pdfURL.deletingPathExtension().lastPathComponent,
+                sourceFileName: pdfURL.lastPathComponent,
+                onProgress: nil
+            )
+            
+            try await repository.save(script: script)
+            print("[Auto-Seed] Berhasil men-seed naskah: \(script.title)")
+        } catch {
+            print("[Auto-Seed] Gagal men-seed PDF: \(error.localizedDescription)")
+        }
+    }
+    #endif
     
     public func fetchRecentScripts() async {
         guard let repository else {
@@ -112,7 +142,7 @@ public final class HomeViewModel {
     /// Menjalankan pipeline OCR + parsing + save. Progress di-update secara real-time (0-70% OCR, 70-90% parsing, 90-100% save).
     /// Pada sukses, menyimpan script dan menampilkan success alert. Pada gagal, menampilkan error message.
     public func processSelectedFile(url: URL) async {
-        guard let ocrService, let parserService, let repository else {
+        guard let ocrService, let repository else {
             errorMessage = "Layanan impor belum dikonfigurasi."
             return
         }
@@ -128,6 +158,7 @@ public final class HomeViewModel {
         }
         
         do {
+            // Step 1: Vision OCR (0.0 - 0.70)
             let rawPagesText = try await ocrService.extractText(from: url) { [weak self] ocrProgress in
                 Task { @MainActor in
                     self?.progressPercentage = ocrProgress * 0.7
@@ -135,6 +166,7 @@ public final class HomeViewModel {
                 }
             }
             
+            // Step 2: Parsing naskah (0.70 - 0.90)
             progressStatusMessage = "Menganalisis struktur naskah..."
             progressPercentage = 0.7
             
@@ -142,8 +174,15 @@ public final class HomeViewModel {
                 rawPagesText: rawPagesText,
                 scriptTitle: url.deletingPathExtension().lastPathComponent,
                 sourceFileName: url.lastPathComponent
-            )
+            ) { [weak self] currentPage, totalPages in
+                Task { @MainActor in
+                    let parseRatio = Double(currentPage) / Double(totalPages)
+                    self?.progressPercentage = 0.7 + (parseRatio * 0.20)
+                    self?.progressStatusMessage = "Menganalisis struktur naskah (halaman \(currentPage)/\(totalPages))..."
+                }
+            }
             
+            // Step 3: Simpan naskah ke repository (0.90 - 1.0)
             progressStatusMessage = "Menyimpan naskah..."
             progressPercentage = 0.9
             
