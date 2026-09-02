@@ -39,6 +39,35 @@ public final class HomeViewModel {
         self.parserService = parserService ?? DIContainer.shared.parserService
     }
     
+    #if DEBUG
+    /// Otomatis memproses dan menyimpan 'ruangtunggu.pdf' dari Bundle jika database masih kosong.
+    public func seedSamplePDFIfNeeded() async {
+        guard let repository, let ocrService, let parserService else { return }
+        
+        do {
+            let existingScripts = try await repository.fetchAllScripts()
+            guard existingScripts.isEmpty else { return }
+            
+            guard let pdfURL = Bundle.main.url(forResource: "ruangtunggu", withExtension: "pdf") else {
+                print("[Auto-Seed] File 'ruangtunggu.pdf' tidak ditemukan di Bundle.")
+                return
+            }
+            
+            let rawPagesText = try await ocrService.extractText(from: pdfURL) { _ in }
+            let script = try await parserService.parseScript(
+                rawPagesText: rawPagesText,
+                scriptTitle: pdfURL.deletingPathExtension().lastPathComponent,
+                sourceFileName: pdfURL.lastPathComponent
+            )
+            
+            try await repository.save(script: script)
+            print("[Auto-Seed] Berhasil men-seed naskah: \(script.title)")
+        } catch {
+            print("[Auto-Seed] Gagal men-seed PDF: \(error.localizedDescription)")
+        }
+    }
+    #endif
+    
     public func fetchRecentScripts() async {
         guard let repository else {
             return
