@@ -82,6 +82,12 @@ struct HomeView: View {
             await viewModel.fetchRecentScripts()
             await viewModel.fetchAllScripts()
         }
+        .onAppear {
+            Task {
+                await viewModel.fetchRecentScripts()
+                await viewModel.fetchAllScripts()
+            }
+        }
         .fileImporter(
             isPresented: $isShowingFileImporter,
             allowedContentTypes: [.pdf, .jpeg, .png, .image],

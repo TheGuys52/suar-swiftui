@@ -21,10 +21,7 @@ DerivedData/
 # Environment Secrets & Local Configs
 # Mengabaikan file config asli yang berisi API key/secrets, tetapi tetap melacak template/example
 *.local.xcconfig
-*Secrets.xcconfig
-SupportingFiles/Configs/Secrets.xcconfig
-SupportingFiles/Config/Secrets.xcconfig
-!SupportingFiles/**/ConfigExample.xcconfig
+Suar/Suar/SupportingFiles/Config/Config.xcconfig
 
 # Lefthook
 lefthook-local.yml
@@ -37,4 +34,4 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 CLAUDE.md
-Suar/Suar/SupportingFiles/Config/Config.xcconfig
+

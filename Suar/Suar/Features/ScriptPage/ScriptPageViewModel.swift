@@ -10,9 +10,18 @@ public final class ScriptPageViewModel {
     public var totalPages: Int = 1
     public var blocks: [ScriptBlock] = []
     public var onBack: (() -> Void)?
+    public var onEdit: (() -> Void)?
+    public var onDelete: (() -> Void)?
     public private(set) var currentScript: Script?
+    private var scriptId: UUID?
     public var isLoading: Bool = false
     public var errorMessage: String?
+
+    // MARK: - Search State
+    public var isSearching: Bool = false
+    public var searchText: String = ""
+    public private(set) var searchResults: [SearchResult] = []
+    public var currentSearchIndex: Int = 0
 
     private let injectedRepository: ScriptRepositoryProtocol?
 
@@ -48,6 +57,67 @@ public final class ScriptPageViewModel {
         onBack?()
     }
 
+    // MARK: - Search
+    public struct SearchResult: Identifiable {
+        public let id = UUID()
+        public let blockId: UUID
+        public let pageNumber: Int
+    }
+
+    public func performSearch(query: String) {
+        searchText = query
+        searchResults = []
+        currentSearchIndex = 0
+
+        guard !query.isEmpty, let script = currentScript else { return }
+
+        for page in script.pages {
+            for block in page.blocks {
+                if block.content.localizedCaseInsensitiveContains(query) {
+                    searchResults.append(SearchResult(blockId: block.id, pageNumber: page.pageNumber))
+                }
+            }
+        }
+    }
+
+    public func nextSearchResult() {
+        guard !searchResults.isEmpty else { return }
+        currentSearchIndex = (currentSearchIndex + 1) % searchResults.count
+        navigateToCurrentSearchResult()
+    }
+
+    public func previousSearchResult() {
+        guard !searchResults.isEmpty else { return }
+        currentSearchIndex = (currentSearchIndex - 1 + searchResults.count) % searchResults.count
+        navigateToCurrentSearchResult()
+    }
+
+    public func dismissSearch() {
+        isSearching = false
+        searchText = ""
+        searchResults = []
+        currentSearchIndex = 0
+    }
+
+    public func clearSearchResults() {
+        searchResults = []
+        currentSearchIndex = 0
+    }
+
+    public func performDelete() async {
+        guard let id = scriptId else { return }
+        try? await repository?.delete(scriptId: id)
+    }
+
+    private func navigateToCurrentSearchResult() {
+        guard currentSearchIndex < searchResults.count else { return }
+        let result = searchResults[currentSearchIndex]
+        if result.pageNumber != currentPageNumber {
+            currentPageNumber = result.pageNumber
+            loadBlocksForCurrentPage()
+        }
+    }
+
     private func loadScript(id: UUID) async {
         guard let repository else {
             errorMessage = "Repository belum dikonfigurasi."
@@ -63,6 +133,7 @@ public final class ScriptPageViewModel {
             }
 
             self.currentScript = script
+            self.scriptId = script.id
             self.scriptTitle = script.title
             self.totalPages = script.pages.count
             self.currentPageNumber = script.lastReadPage
