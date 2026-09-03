@@ -36,34 +36,25 @@ struct AllScriptList: View {
 
 private struct EmptyScriptListPlaceholder: View {
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: "doc.text.fill")
-                .font(.title2)
-                .foregroundStyle(.white)
-                .padding(10)
-                .background(Color.themeRed)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+        VStack(spacing: 12) {
+            // HIG menyarankan ikon SF Symbol yang netral dan ukuran sedang/besar
+            Image(systemName: "doc.text")
+                .font(.system(size: 48))
+                .foregroundStyle(Color.themeRed)
             
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(spacing: 4) {
                 Text("Naskah Masih Kosong")
-                    .font(.headline)
-                    .bold()
+                    .font(.title3)
+                    .fontWeight(.bold)
                 
-                Text("Daftar naskah kamu belum tersedia. Tekan tombol + di kanan bawah untuk mengimpor file PDF naskahmu.")
-                    .font(.caption)
+                Text("Daftar naskah kamu belum tersedia.\nTekan tombol + untuk mengimpor file PDF naskahmu.")
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.center)
             }
-            
-            Spacer()
         }
-        .padding()
-        .background(.thinMaterial)
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.themeRed.opacity(0.25), lineWidth: 1)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
