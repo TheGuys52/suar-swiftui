@@ -45,33 +45,24 @@ struct ContinueReadingSection: View {
 
 private struct ContinueReadingPlaceholderCard: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                Image(systemName: "book.closed.fill")
-                    .font(.title3)
-                    .foregroundStyle(.white)
-                    .padding(10)
-                    .background(Color.themeRed)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                
-                Text("Belum Ada Bacaan")
-                    .font(.headline)
-                    .bold()
-            }
+        VStack(spacing: 12) {
+            Image(systemName: "book.closed")
+                .font(.system(size: 48))
+                .foregroundStyle(Color.themeRed)
             
-            Text("Naskah yang kamu buka akan tersimpan di sini untuk kamu lanjutkan kapan saja.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(spacing: 4) {
+                Text("Belum Ada Naskah yang Dibaca")
+                    .font(.title3)
+                    .fontWeight(.bold)
+                
+                Text("Naskah yang terakhir kamu buka akan muncul di sini agar bisa dilanjutkan dengan cepat.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
-        .padding()
-        .frame(width: 300, alignment: .leading)
-        .background(.thinMaterial)
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.themeRed.opacity(0.25), lineWidth: 1)
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

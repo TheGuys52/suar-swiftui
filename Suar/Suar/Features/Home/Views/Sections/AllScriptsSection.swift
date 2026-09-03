@@ -56,7 +56,7 @@ struct AllScriptsSection: View {
                         }
                         .pickerStyle(.inline)
                     } label: {
-                        Image(systemName: "arrow.up.arrow.down")
+                        Image(systemName: "ellipsis")
                             .foregroundStyle(.white)
                             .bold()
                             .frame(width: 44, height: 44)
