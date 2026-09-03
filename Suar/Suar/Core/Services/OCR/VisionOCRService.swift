@@ -88,22 +88,34 @@ public final class VisionOCRService: VisionOCRServiceProtocol {
                     continuation.resume(throwing: error)
                     return
                 }
-                
+
                 guard let observations = request.results as? [VNRecognizedTextObservation] else {
                     continuation.resume(returning: "")
                     return
                 }
-                
-                let pageStrings = observations.compactMap { observation in
+
+                // Sort by Y (top-to-bottom), then X (left-to-right) to handle
+                // two-column layouts where left column text is read before right column.
+                let sortedObservations = observations.sorted { obs1, obs2 in
+                    let y1 = obs1.boundingBox.origin.y
+                    let y2 = obs2.boundingBox.origin.y
+                    let rowTolerance: CGFloat = 0.01 // ~1% page height tolerance for same-row grouping
+                    if abs(y1 - y2) <= rowTolerance {
+                        return obs1.boundingBox.origin.x < obs2.boundingBox.origin.x
+                    }
+                    return y1 > y2 // higher Y = top of page (Vision uses bottom-left origin)
+                }
+
+                let pageStrings = sortedObservations.compactMap { observation in
                     observation.topCandidates(1).first?.string
                 }
-                
+
                 continuation.resume(returning: pageStrings.joined(separator: "\n"))
             }
-            
+
             request.recognitionLevel = .accurate
             request.usesLanguageCorrection = true
-            
+
             let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             do {
                 try handler.perform([request])

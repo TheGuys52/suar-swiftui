@@ -29,9 +29,4 @@ extension Color {
         let blue  = Double(hex & 0x0000FF)         / 255.0
         self.init(.sRGB, red: red, green: green, blue: blue, opacity: opacity)
     }
-
-    /// Initialize a color using RGB values in the 0–255 range
-    init(r: Double, g: Double, b: Double, opacity: Double = 1.0) {
-        self.init(.sRGB, red: r / 255.0, green: g / 255.0, blue: b / 255.0, opacity: opacity)
-    }
 }

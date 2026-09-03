@@ -16,9 +16,9 @@ public struct AccessibleTouchTargetModifier: ViewModifier {
     }
     
     public func body(content: Content) -> some View {
-        // TODO: [@Team-Accessibility] Bungkus content dengan frame minWidth & minHeight
-        // serta tambahkan contentShape(Rectangle()) untuk memastikan seluruh area 44pt responsif terhadap ketukan
         content
+            .frame(minWidth: minDimension, minHeight: minDimension)
+            .contentShape(Rectangle())
     }
 }
 

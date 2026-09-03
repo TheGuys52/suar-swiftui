@@ -142,4 +142,27 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
+
+    /// Menghapus naskah berdasarkan ID beserta seluruh halaman dan blok dialog terkait (cascade delete).
+    public nonisolated func delete(scriptId: UUID) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            Task { @MainActor in
+                do {
+                    let descriptor = FetchDescriptor<Script>(
+                        predicate: #Predicate { $0.id == scriptId }
+                    )
+                    let results = try modelContext.fetch(descriptor)
+                    guard let script = results.first else {
+                        continuation.resume()
+                        return
+                    }
+                    modelContext.delete(script)
+                    try modelContext.save()
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
 }
