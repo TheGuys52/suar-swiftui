@@ -56,7 +56,7 @@ struct AllScriptsSection: View {
                         }
                         .pickerStyle(.inline)
                     } label: {
-                        Image(systemName: "line.3.horizontal.decrease")
+                        Image(systemName: "line.3.horizontal.decrease.circle")
                             .foregroundStyle(.white)
                             .bold()
                             .frame(width: 44, height: 44)
