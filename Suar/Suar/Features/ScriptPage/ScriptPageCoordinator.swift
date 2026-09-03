@@ -21,8 +21,9 @@ public final class ScriptPageCoordinator: CoordinatorProtocol {
     }
 
     private func configureBindings() {
+        let router = self.router
         viewModel.onBack = { [weak self] in
-            self?.router.pop()
+            router.pop()
         }
     }
 }

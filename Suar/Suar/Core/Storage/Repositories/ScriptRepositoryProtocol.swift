@@ -30,6 +30,9 @@ public protocol ScriptRepositoryProtocol: Sendable {
     
     /// Menghapus naskah beserta seluruh halaman dan blok terkait (cascade)
     func delete(script: Script) async throws
+
+    /// Menghapus naskah berdasarkan ID beserta seluruh halaman dan blok terkait (cascade)
+    func delete(scriptId: UUID) async throws
 }
 
 // TODO: [@Team-Storage] Buat file `ScriptRepository.swift` yang mengimplementasikan protocol ini

@@ -76,8 +76,17 @@ struct HomeView: View {
                     }
                 }
         .task {
+            #if DEBUG
+            await viewModel.seedSamplePDFIfNeeded()
+            #endif
             await viewModel.fetchRecentScripts()
             await viewModel.fetchAllScripts()
+        }
+        .onAppear {
+            Task {
+                await viewModel.fetchRecentScripts()
+                await viewModel.fetchAllScripts()
+            }
         }
         .fileImporter(
             isPresented: $isShowingFileImporter,
