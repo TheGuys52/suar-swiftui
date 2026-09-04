@@ -94,6 +94,7 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        request.timeoutInterval = 300
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
