@@ -57,14 +57,10 @@ struct AllScriptsSection: View {
                         .pickerStyle(.inline)
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
-                            .foregroundStyle(.white)
+                            .font(.largeTitle)
+                            .foregroundStyle(Color.themeRed)
                             .bold()
                             .frame(width: 44, height: 44)
-                            .glassEffect(
-                                .regular
-                                    .tint(Color.themeRed)
-                                    .interactive()
-                            )
                     }
                     .clipShape(Circle())
                 } else {
