@@ -24,7 +24,7 @@ struct ContinueReadingSection: View {
             } else {
                 ScrollView(.horizontal) {
                     HStack(spacing: 16) {
-                        ForEach(Array(scripts.prefix(5)), id: \.id) { script in
+                        ForEach(Array(scripts.prefix(3)), id: \.id) { script in
                             ReadingCard(script: script)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
