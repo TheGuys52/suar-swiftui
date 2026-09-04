@@ -51,6 +51,8 @@ struct ReadingCard: View {
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(Color.themeRed, lineWidth: 2)
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityLabel)
         }
     }
 
@@ -86,6 +88,14 @@ struct ReadingCard: View {
             return "0%"
         }
         return "\(Int((progressValue * 100).rounded()))%"
+    }
+
+    private var accessibilityLabel: String {
+        if script.pageCount > 0 {
+            return "Kartu naskah \(script.title). Bab \(script.lastReadPage) dari \(script.pageCount). Progres baca \(progressText) persen."
+        } else {
+            return "Kartu naskah \(script.title). Belum ada progres baca."
+        }
     }
 }
 
