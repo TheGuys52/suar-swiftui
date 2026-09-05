@@ -14,8 +14,8 @@ cd "$(dirname "$0")/.." || exit 1
 brew install xcodegen
 
 # 4. Buat direktori dan file Config.xcconfig dari Environment Variable
-mkdir -p Suar/SupportingFiles/Config
-cat <<EOF > Suar/SupportingFiles/Config/Config.xcconfig
+mkdir -p Suar/Suar/SupportingFiles/Config
+cat <<EOF > Suar/Suar/SupportingFiles/Config/Config.xcconfig
 LLM_OLAGON_API_KEY = $LLM_OLAGON_API_KEY
 EOF
 
