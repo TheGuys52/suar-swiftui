@@ -21,3 +21,10 @@ EOF
 
 # 5. Generate Xcode Project
 xcodegen generate
+
+# 6. Aktifkan SPM auto-resolution (Xcode Cloud menonaktifkannya by default)
+defaults write com.apple.dt.Xcode IDEDisableAutomaticPackageResolution -bool NO
+defaults write com.apple.dt.Xcode IDEPackageOnlyUseVersionsFromResolvedFile -bool NO
+
+# 7. Resolve SPM dependencies dan generate Package.resolved
+xcodebuild -resolvePackageDependencies -project Suar.xcodeproj -scheme Suar
