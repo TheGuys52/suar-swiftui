@@ -31,17 +31,17 @@ final class ScriptOCRParserTests: XCTestCase {
             fileName: "ruangtunggu",
             fileExtension: "pdf",
             scriptTitle: "Ruang Tunggu",
-            expectedCharacters: ["PRIA", "WANITA"]
+            expectedCharacters: ["PRIA", "8. WANITA"]
         )
     }
-    
+
     // MARK: - Test Case 2: Scanned/Image PDF
     func testParseScannedImagePDF() async throws {
         try await assertScriptParsing(
             fileName: "ruangtungguimgpdf",
             fileExtension: "pdf",
             scriptTitle: "Ruang Tunggu",
-            expectedCharacters: ["PRIA", "WANITA"]
+            expectedCharacters: ["PRIA", "8. WANITA"]
         )
     }
     
@@ -103,5 +103,16 @@ final class ScriptOCRParserTests: XCTestCase {
         print("Total Blok: \(allBlocks.count)")
         print("Daftar Tokoh: \(characterNames)")
         print("=========================================================")
+    }
+
+    // MARK: - Test Case 4: Ordinal character name
+    func testPreservesOrdinalNumberInCharacterName() {
+        let parser = ScriptParserService()
+        let result = parser.matchCharacterAndDialogue("8. WANITA : Apa kabar?")
+        XCTAssertEqual(result?.0, "8. WANITA")
+        XCTAssertEqual(result?.1, "Apa kabar?")
+
+        let noOrdinal = parser.matchCharacterAndDialogue("WANITA : Apa kabar?")
+        XCTAssertEqual(noOrdinal?.0, "WANITA")
     }
 }

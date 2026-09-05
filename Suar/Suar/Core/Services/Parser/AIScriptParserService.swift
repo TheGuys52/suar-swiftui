@@ -72,7 +72,7 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
         Ubah teks skenario mentah hasil OCR berikut menjadi struktur JSON array of objects.
         Setiap object harus memiliki field:
         - "type": salah satu dari ["sceneHeader", "dialogue", "stageDirection"]
-        - "characterName": nama tokoh jika type adalah "dialogue", jika bukan dialog isi dengan null.
+        - "characterName": nama tokoh jika type adalah "dialogue", JANGAN hilangkan angka urut di depan nama (misal: "8. WANITA" tetap "8. WANITA", bukan "WANITA"). Jika bukan dialog isi dengan null.
         - "cueDescription": petunjuk emosi/aksi dalam tanda kurung jika ada pada dialog, jika tidak ada isi dengan null.
         - "content": isi teks atau dialog dari elemen tersebut.
 

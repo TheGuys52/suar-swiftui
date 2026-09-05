@@ -180,7 +180,7 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
         
         var result: [String] = []
         var characterQueue: [String] = []
-
+        
         for line in cleaned {
             if line.hasPrefix(":") {
                 if !characterQueue.isEmpty {
@@ -198,11 +198,11 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
                 result.append(line)
             }
         }
-
+        
         while !characterQueue.isEmpty {
             result.append(characterQueue.removeFirst())
         }
-
+        
         var postResult: [String] = []
         var i = 0
         while i < result.count {
@@ -230,7 +230,7 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             }
             i += 1
         }
-
+        
         return postResult.filter { !$0.isEmpty }
     }
     
@@ -238,65 +238,62 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
         let pattern = "^(?:\\d+\\.\\s*)?([A-Z0-9\\s\\&\\-]+)$"
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return false }
         let range = NSRange(location: 0, length: line.utf16.count)
-        
+
         if regex.firstMatch(in: line, options: [], range: range) != nil {
-            let cleanName = line.replacingOccurrences(of: "^\\d+\\.\\s*", with: "", options: .regularExpression)
-            return cleanName.count <= 25 && cleanName.components(separatedBy: .whitespaces).count <= 4
+            return line.count <= 25 && line.components(separatedBy: .whitespaces).count <= 4
         }
         return false
     }
-    
+
     private func isSceneHeader(_ line: String) -> Bool {
         let headers = ["Bagian Pertama", "Bagian Kedua", "Bagian Ketiga", "Bagian Keempat", "Dramatis Personae:", "***"]
         return headers.contains { line.localizedCaseInsensitiveContains($0) }
     }
-    
-    private func matchCharacterAndDialogue(_ line: String) -> (String, String)? {
+
+    func matchCharacterAndDialogue(_ line: String) -> (String, String)? {
         let pattern = "^(?:\\d+\\.\\s*)?([A-Z0-9\\s\\&\\-]+)\\s*:\\s*(.*)$"
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return nil }
-        
+
         let nsString = line as NSString
         let range = NSRange(location: 0, length: nsString.length)
-        
+
         if let match = regex.firstMatch(in: line, options: [], range: range) {
-            var character = nsString.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespaces)
+            let character = nsString.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespaces)
             let dialogue = nsString.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
-            
-            character = character.replacingOccurrences(of: "^\\d+\\.\\s*", with: "", options: .regularExpression)
-            
+
             if character.count <= 25 && character.components(separatedBy: .whitespaces).count <= 4 {
                 return (character, dialogue)
             }
         }
-        
+
         return nil
     }
-    
+
     private func extractCue(from text: String) -> (String?, String) {
         let pattern = "^\\s*\\(([^)]+)\\)\\s*(.*)$"
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) else {
             return (nil, text)
         }
-        
+
         let nsString = text as NSString
         let range = NSRange(location: 0, length: nsString.length)
-        
+
         if let match = regex.firstMatch(in: text, options: [], range: range) {
             let cue = nsString.substring(with: match.range(at: 1)).trimmingCharacters(in: .whitespaces)
             let remainingDialogue = nsString.substring(with: match.range(at: 2)).trimmingCharacters(in: .whitespaces)
             return (cue.isEmpty ? nil : cue, remainingDialogue)
         }
-        
+
         return (nil, text)
     }
-    
+
     private func isStageDirection(_ line: String) -> Bool {
         let lettersOnly = line.components(separatedBy: CharacterSet.letters.inverted).joined()
         guard !lettersOnly.isEmpty else { return false }
-        
+
         let uppercaseLetters = lettersOnly.filter { $0.isUppercase }
         let uppercaseRatio = Double(uppercaseLetters.count) / Double(lettersOnly.count)
-        
+
         return uppercaseRatio >= 0.8
     }
 }
