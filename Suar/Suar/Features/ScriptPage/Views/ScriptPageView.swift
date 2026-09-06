@@ -5,11 +5,11 @@ public struct ScriptPageView: View {
     @Bindable var viewModel: ScriptPageViewModel
     @FocusState private var searchFieldFocused: Bool
     @State private var showDeleteConfirmation = false
-
+    
     public init(viewModel: ScriptPageViewModel) {
         self.viewModel = viewModel
     }
-
+    
     public var body: some View {
         ZStack {
             Color.white.ignoresSafeArea()
@@ -40,12 +40,21 @@ public struct ScriptPageView: View {
                     } label: {
                         Image(systemName: "magnifyingglass")
                     }
-
+                    
                     Menu {
                         Button {
-                            viewModel.onEdit?()
+                            if viewModel.isEditMode {
+                                viewModel.dismissSearch()
+                            }
+                            Task {
+                                await viewModel.saveAllEditedBlocks()
+                            }
+                            viewModel.toggleEditMode()
                         } label: {
-                            Label("Edit", systemImage: "pencil")
+                            Label(
+                                viewModel.isEditMode ? "Selesai" : "Edit",
+                                systemImage: viewModel.isEditMode ? "checkmark" : "pencil"
+                            )
                         }
                         Divider()
                         Button(role: .destructive) {
@@ -86,14 +95,14 @@ public struct ScriptPageView: View {
             Text("Naskah ini akan dihapus secara permanen. Apakah Anda yakin?")
         }
     }
-
+    
     // MARK: - Find Navigator
     private var findNavigator: some View {
         HStack(spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-
+                
                 TextField("Cari...", text: $viewModel.searchText)
                     .textFieldStyle(.plain)
                     .focused($searchFieldFocused)
@@ -112,20 +121,20 @@ public struct ScriptPageView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
-
+            
             if !viewModel.searchResults.isEmpty {
                 Text("\(viewModel.currentSearchIndex + 1) dari \(viewModel.searchResults.count)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
-
+                
                 Button {
                     viewModel.previousSearchResult()
                 } label: {
                     Image(systemName: "chevron.up")
                 }
                 .disabled(viewModel.searchResults.isEmpty)
-
+                
                 Button {
                     viewModel.nextSearchResult()
                 } label: {
@@ -133,7 +142,7 @@ public struct ScriptPageView: View {
                 }
                 .disabled(viewModel.searchResults.isEmpty)
             }
-
+            
             Button("Selesai") {
                 withAnimation(.easeInOut(duration: 0.25)) {
                     viewModel.dismissSearch()
@@ -146,7 +155,7 @@ public struct ScriptPageView: View {
         .background(Color(.systemBackground))
         .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
     }
-
+    
     // MARK: - Content Area
     @ViewBuilder
     private var contentArea: some View {
@@ -154,18 +163,26 @@ public struct ScriptPageView: View {
             ProgressView("Memuat naskah...")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
+            if viewModel.isEditMode {
+                Text("Mode Edit - ketuk teks untuk mengubah")
+                    .font(.caption)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(Color.themeRed)
+            }
             scrollContent
         }
     }
-
+    
     private var scrollContent: some View {
         ScrollViewReaderContent(viewModel: viewModel, searchText: viewModel.searchText)
     }
-
+    
     private var sceneBlocks: [ScriptBlock] {
         viewModel.blocks.filter { $0.blockType == .sceneHeader }
     }
-
+    
     private var uniqueCharacterBlocks: [ScriptBlock] {
         var seen = Set<String>()
         return viewModel.blocks.filter { block in
@@ -181,17 +198,24 @@ public struct ScriptPageView: View {
 private struct ScrollViewReaderContent: View {
     @Bindable var viewModel: ScriptPageViewModel
     let searchText: String
-
+    
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     ForEach(viewModel.blocks) { block in
-                        ScriptLineRowView(
-                            block: block,
-                            searchText: blockMatchesSearch(block) ? searchText : nil
-                        )
-                        .id(block.id)
+                        if viewModel.isEditMode {
+                            EditableBlockRowView(block: block) { newContent in
+                                viewModel.markBlockDirty(blockId: block.id, content: newContent)
+                            }
+                            .id(block.id)
+                        } else {
+                            ScriptLineRowView(
+                                block: block,
+                                searchText: blockMatchesSearch(block) ? searchText : nil
+                            )
+                            .id(block.id)
+                        }
                     }
                 }
                 .padding(.horizontal, 20)
@@ -213,12 +237,12 @@ private struct ScrollViewReaderContent: View {
             }
         }
     }
-
+    
     private func blockMatchesSearch(_ block: ScriptBlock) -> Bool {
         guard !searchText.isEmpty else { return false }
         return viewModel.searchResults.contains { $0.blockId == block.id }
     }
-
+    
     private func scrollToCurrentSearchResult(proxy: ScrollViewProxy) {
         guard viewModel.currentSearchIndex < viewModel.searchResults.count else { return }
         let blockId = viewModel.searchResults[viewModel.currentSearchIndex].blockId

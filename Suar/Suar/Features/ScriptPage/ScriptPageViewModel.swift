@@ -161,4 +161,25 @@ public final class ScriptPageViewModel {
         guard let script = currentScript else { return }
         Task { try? await repository?.updateLastReadPage(scriptId: script.id, pageNumber: currentPageNumber) }
     }
+    
+    // MARK: - Update State
+
+    public var editedBlocks: [UUID: String] = [:]
+    public var isEditMode: Bool = false
+    public func toggleEditMode() {
+        isEditMode.toggle()
+    }
+    
+    // Edit block, belum di save
+    public func markBlockDirty(blockId: UUID, content: String) {
+        editedBlocks[blockId] = content
+    }
+
+    public func saveAllEditedBlocks() async {
+        for (blockId, content) in editedBlocks {
+            try? await repository?.updateBlock(blockId: blockId, content: content)
+        }
+        editedBlocks.removeAll()
+        loadBlocksForCurrentPage()
+    }
 }

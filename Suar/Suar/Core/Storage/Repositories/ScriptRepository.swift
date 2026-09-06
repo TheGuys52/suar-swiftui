@@ -10,13 +10,13 @@ import SwiftData
 
 public actor ScriptRepository: ScriptRepositoryProtocol {
     private let modelContext: ModelContext
-
+    
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
-
+    
     // MARK: - Fetch Operations
-
+    
     /// Mengambil seluruh naskah yang tersimpan, diurutkan dari yang terbaru diakses.
     public nonisolated func fetchAllScripts() async throws -> [Script] {
         try await withCheckedThrowingContinuation { continuation in
@@ -33,7 +33,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Mengambil daftar naskah terakhir diakses sesuai limit, diurutkan dari yang terbaru.
     public nonisolated func fetchRecentScripts(limit: Int) async throws -> [Script] {
         try await withCheckedThrowingContinuation { continuation in
@@ -51,7 +51,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Mencari naskah berdasarkan pencocokan judul (case-insensitive).
     public nonisolated func searchScripts(query: String) async throws -> [Script] {
         try await withCheckedThrowingContinuation { continuation in
@@ -70,7 +70,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Mengambil satu naskah lengkap beserta halaman dan blok dialog berdasarkan ID.
     public nonisolated func fetchScript(by id: UUID) async throws -> Script? {
         try await withCheckedThrowingContinuation { continuation in
@@ -87,9 +87,9 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     // MARK: - CRUD Operations
-
+    
     /// Menyimpan naskah baru hasil impor OCR/Parser ke database SwiftData.
     public nonisolated func save(script: Script) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -104,7 +104,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Memperbarui halaman terakhir yang dibaca dan timestamp akses.
     public nonisolated func updateLastReadPage(scriptId: UUID, pageNumber: Int) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -127,7 +127,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Menghapus naskah beserta seluruh halaman dan blok dialog terkait (cascade delete).
     public nonisolated func delete(script: Script) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -142,7 +142,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Menghapus naskah berdasarkan ID beserta seluruh halaman dan blok dialog terkait (cascade delete).
     public nonisolated func delete(scriptId: UUID) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -157,6 +157,32 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
                         return
                     }
                     modelContext.delete(script)
+                    try modelContext.save()
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    /// Mengupdate konten block berdasarkan ID
+    public nonisolated func updateBlock(blockId: UUID, content: String) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            Task { @MainActor in
+                do {
+                    // TODO: fetch ScriptBlock by UUID
+                    let descriptor = FetchDescriptor<ScriptBlock>(
+                        predicate: #Predicate { $0.id == blockId }
+                    )
+                    let results = try modelContext.fetch(descriptor)
+                    guard let block = results.first else {
+                        continuation.resume()
+                        return
+                    }
+                    // Update Content
+                    block.content = content
+                    // Simpan
                     try modelContext.save()
                     continuation.resume()
                 } catch {
