@@ -28,7 +28,5 @@
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<key>LLM_OLAGON_API_KEY</key>
-	<string>$(LLM_OLAGON_API_KEY)</string>
 </dict>
 </plist>
