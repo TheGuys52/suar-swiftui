@@ -16,9 +16,11 @@ public final class ScriptBlock {
     public var characterName: String?
     public var content: String
     public var cueDescription: String?
-    
+    public var startPageNumber: Int?
+    public var endPageNumber: Int?
+
     public var page: ScriptPage?
-    
+
     public init(
         id: UUID = UUID(),
         orderIndex: Int,
@@ -26,6 +28,8 @@ public final class ScriptBlock {
         characterName: String? = nil,
         content: String,
         cueDescription: String? = nil,
+        startPageNumber: Int? = nil,
+        endPageNumber: Int? = nil,
         page: ScriptPage? = nil
     ) {
         self.id = id
@@ -34,6 +38,8 @@ public final class ScriptBlock {
         self.characterName = characterName
         self.content = content
         self.cueDescription = cueDescription
+        self.startPageNumber = startPageNumber
+        self.endPageNumber = endPageNumber
         self.page = page
     }
 }

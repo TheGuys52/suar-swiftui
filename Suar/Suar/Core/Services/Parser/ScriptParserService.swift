@@ -79,7 +79,8 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
                 let block = ScriptBlock(
                     orderIndex: currentOrder,
                     blockType: .sceneHeader,
-                    content: line
+                    content: line,
+                    startPageNumber: pageNumber
                 )
                 blocks.append(block)
                 currentOrder += 1
@@ -108,7 +109,8 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
                     blockType: .dialogue,
                     characterName: character,
                     content: cleanDialogueText,
-                    cueDescription: cueText
+                    cueDescription: cueText,
+                    startPageNumber: pageNumber
                 )
                 blocks.append(block)
                 currentOrder += 1
@@ -131,7 +133,8 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
                 let block = ScriptBlock(
                     orderIndex: currentOrder,
                     blockType: .stageDirection,
-                    content: fullStageDirection
+                    content: fullStageDirection,
+                    startPageNumber: pageNumber
                 )
                 blocks.append(block)
                 currentOrder += 1
@@ -142,7 +145,8 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             let block = ScriptBlock(
                 orderIndex: currentOrder,
                 blockType: .stageDirection,
-                content: line
+                content: line,
+                startPageNumber: pageNumber
             )
             blocks.append(block)
             currentOrder += 1
