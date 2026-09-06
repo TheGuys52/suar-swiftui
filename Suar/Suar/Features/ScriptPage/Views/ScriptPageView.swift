@@ -57,6 +57,15 @@ public struct ScriptPageView: View {
                             )
                         }
                         Divider()
+                        Button {
+                            viewModel.toggleVoiceEditMode()
+                        } label: {
+                            Label(
+                                viewModel.isVoiceEditMode ? "Selesai" : "Edit dengan Suara",
+                                systemImage: viewModel.isVoiceEditMode ? "checkmark" : "mic.fill"
+                            )
+                        }
+                        Divider()
                         Button(role: .destructive) {
                             showDeleteConfirmation = true
                         } label: {

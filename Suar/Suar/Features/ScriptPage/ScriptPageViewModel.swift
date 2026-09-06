@@ -162,7 +162,7 @@ public final class ScriptPageViewModel {
         Task { try? await repository?.updateLastReadPage(scriptId: script.id, pageNumber: currentPageNumber) }
     }
     
-    // MARK: - Update State
+    // MARK: - Edit Manual State
 
     public var editedBlocks: [UUID: String] = [:]
     public var isEditMode: Bool = false
@@ -180,6 +180,39 @@ public final class ScriptPageViewModel {
             try? await repository?.updateBlock(blockId: blockId, content: content)
         }
         editedBlocks.removeAll()
+        loadBlocksForCurrentPage()
+    }
+    
+    // MARK: - Edit By Voice State
+    
+    public var isVoiceEditMode: Bool = false
+    public var selectedVoiceEditBlockId: UUID?
+    // Block diedit, belum di save
+    public var voiceEditedBlocks: [UUID: String] = [:]
+    
+    public func toggleVoiceEditMode() {
+        isVoiceEditMode.toggle()
+        if !isVoiceEditMode {
+            selectedVoiceEditBlockId = nil
+            voiceEditedBlocks.removeAll()
+        }
+    }
+    
+    // Pilih block untuk diedit suara
+    public func selectVoiceEditBlock(_ block: ScriptBlock) {
+        selectedVoiceEditBlockId = block.id
+    }
+    
+    // Block sudah diedit, belum di save
+    public func markVoiceBlockDirty(id: UUID, content: String) {
+        voiceEditedBlocks[id] = content
+    }
+    
+    public func saveAllVoiceEditedBlocks() async {
+        for (blockId, content) in voiceEditedBlocks {
+            try? await repository?.updateBlock(blockId: blockId, content: content)
+        }
+        voiceEditedBlocks.removeAll()
         loadBlocksForCurrentPage()
     }
 }
