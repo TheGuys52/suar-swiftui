@@ -7,6 +7,10 @@
 
 import Foundation
 
+public enum AIScriptParserError: Error {
+    case malformedResponse(String)
+}
+
 public final class AIScriptParserService: ScriptParserServiceProtocol {
     private let baseURL = "https://gateway.olagon.site/anthropic/v1/messages"
     private let apiKey: String
@@ -55,7 +59,7 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
                 }
             }
 
-            let result = try await parseChunk(
+            let result = try await parseChunkWithRetry(
                 content: chunkContent,
                 previousUnresolved: previousUnresolved,
                 chunkStartPage: chunkStartPage,
@@ -167,6 +171,38 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
 
     // MARK: - Chunk Parsing
 
+    private let maxRetries = 2
+
+    private func parseChunkWithRetry(
+        content: String,
+        previousUnresolved: AIBlock?,
+        chunkStartPage: Int,
+        chunkEndPage: Int
+    ) async throws -> ChunkParseResult {
+        var lastError: Error?
+        for attempt in 0..<(maxRetries + 1) {
+            do {
+                let result = try await parseChunk(
+                    content: content,
+                    previousUnresolved: previousUnresolved,
+                    chunkStartPage: chunkStartPage,
+                    chunkEndPage: chunkEndPage
+                )
+                if result.newBlocks.isEmpty {
+                    print("[AI-Parser] Chunk \(chunkStartPage)-\(chunkEndPage): empty blocks, retry \(attempt + 1)/\(maxRetries + 1)")
+                    throw AIScriptParserError.malformedResponse("Empty newBlocks")
+                }
+                return result
+            } catch {
+                lastError = error
+                if attempt < maxRetries {
+                    print("[AI-Parser] Chunk \(chunkStartPage)-\(chunkEndPage): error, retry \(attempt + 1)/\(maxRetries + 1)")
+                }
+            }
+        }
+        throw lastError ?? AIScriptParserError.malformedResponse("Unknown error after \(maxRetries) retries")
+    }
+
     private struct ChunkParseResult {
         let mergedStartBlock: AIBlock?
         let newBlocks: [AIBlock]
@@ -200,36 +236,115 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
         }
 
         let systemPrompt = """
-        Ubah teks skenario mentah hasil OCR berikut menjadi struktur JSON.
-        Setiap blok harus memiliki field:
-        - "type": salah satu dari ["sceneHeader", "dialogue", "stageDirection"]
-        - "characterName": nama tokoh jika type adalah "dialogue", JANGAN hilangkan angka urut di depan nama (misal: "8. WANITA" tetap "8. WANITA", bukan "WANITA"). Jika bukan dialogue isi dengan null.
-        - "cueDescription": petunjuk emosi/aksi dalam tanda kurung jika ada, jika tidak ada isi dengan null.
-        - "content": isi teks atau dialog dari elemen tersebut.
-        - "startPage": nomor halaman dimulainya block ini.
-        - "endPage": nomor halaman berakhirnya block ini (isi jika block menyambung ke halaman berikutnya).
-        - "isTrailingResolved": true jika block ini UTUH dan tidak terpotong di akhir chunk. false jika block terpotong/masih berlanjut.
+Kamu adalah parser skenario drama. Ubah teks hasil OCR menjadi JSON.
 
-        RETURNIKAN HANYA JSON object murni (tanpa markdown codeblock atau teks tambahan) dengan struktur:
-        {
-          "mergedStartBlock": <AIBlock> | null,
-          "newBlocks": [<AIBlock>, ...],
-          "trailingUnresolvedBlock": <AIBlock> | null
-        }
+FORMAT INPUT:
+- Teks berada di antara marker "--- PAGE X ---" yang menunjukkan nomor halaman.
+- Dialog tokoh ditandai dengan format: "NAMA : isi" di mana NAMA diikuti titik dua.
+  Contoh: "Bas : Isi dialog", "Frank : Isi dialog", "1. PRIA : Isi dialog", "Wanita : Isi dialog"
+  NAMA adalah case-insensitive: "Bas", "Frank", "1. PRIA", "WANITA" semua valid.
+- Jika setelah ":" kosong, dialogue content = baris-baris berikutnya (indent atau lanjutan) sampai tokoh berikutnya.
+- TEKS TANPA "NAMA :" = stageDirection (bukan dialogue). Contoh: judul puisi, narasi, puisi tanpa tokoh.
+- Baris yang hanya berisi karakter "=" atau "*" (atau keduanya) = transition block.
 
-        - "mergedStartBlock": Jika ada block pertama di chunk ini yang melanjutkan unresolved block dari chunk sebelumnya, ISI DENGAN block yang sudah di-GABUNGKAN (gabungkan content + isTrailingResolved=true). Jika TIDAK ada kelanjutan, NULL.
-        - "newBlocks": Semua block baru yang UTUH dalam chunk ini (tidak termasuk mergedStartBlock). Setiap block harus memiliki startPage dan endPage yang valid.
-        - "trailingUnresolvedBlock": Jika block TERAKHIR di chunk ini terpotong (isTrailingResolved=false), KEMBALIKAN block tersebut. Jika UTUH, NULL.
+FORMAT OUTPUT (HANYA JSON, tanpa markdown):
+{
+  "mergedStartBlock": <AIBlock> | null,
+  "newBlocks": [<AIBlock>, ...],
+  "trailingUnresolvedBlock": <AIBlock> | null
+}
 
-        ATURAN PENTING:
-        - Marker "--- PAGE X ---" menunjukkan awal halaman baru.
-        - Jika block terpotong di batas halaman (misal: dialogue dimulai di halaman 1 dan berlanjut di halaman 2), set isTrailingResolved=false pada block di halaman 1, dan block di halaman 2 menjadi kelanjutan (akan di-merge oleh chunk berikutnya).
-        - Block dengan isTrailingResolved=false di akhir chunk harus dikembalikan sebagai trailingUnresolvedBlock.
-        - JANGAN mengubah angka ordinal di depan nama karakter (misal: "8. WANITA").
-        """
+ATURAN (PENTING):
+1. SUATU BARIS = satu block. Tidak boleh gabung 2 baris berbeda jadi 1 block.
+2. BARIS DENGAN "NAMA :" = dialogue block. characterName=NAMA (isi sebelum ":"), content=isi setelah ":".
+   Jika setelah ":" kosong, AMBIL baris-baris berikutnya sebagai content.
+   STOP collect jika baris berikutnya memiliki "NAMA :" baru (tokoh berbeda) atau scene header.
+3. BARIS TANPA "NAMA :" (tidak ada titik dua setelah nama tokoh) = stageDirection.
+   Contoh: judul puisi, narasi tanpa tokoh, block parenthetical (Suara, etc.).
+4. Baris yang hanya berisi "=" atau "*" (contoh: "==================" atau "***** =============") = transition block.
+5. "Bagian Pertama/Kedua/Ketiga", "***", atau "Dramatis Personae" = sceneHeader.
+6. "(Suara: ...)" atau "(Suara...)" = stageDirection.
+   "(tersenyum)", "(mengangguk)" dalam dialogue = cueDescription.
+7. isTrailingResolved=true jika block UTUH, false jika terpotong.
+8. Jangan kosongkan field content.
+
+CONTOH 1 - Naskah dengan multi-line dialogue (ordinal + continue):
+Input:
+--- PAGE 2 ---
+1. PRIA
+(mengelus dada)
+Ya Tuhan. Oh ya Tuhaan.
+Tuhan atas
+segala duka. Tuhan atas
+semua jenis rasa sakit.
+1. PRIA
+(menundukkan kepala)
+Tuhanku, Tuhanku...
+
+Output:
+{
+  "mergedStartBlock": null,
+  "newBlocks": [
+    {"type":"dialogue","characterName":"1. PRIA","cueDescription":"mengelus dada","content":"Ya Tuhan. Oh ya Tuhaan. Tuhan atas segala duka. Tuhan atas semua jenis rasa sakit.","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"1. PRIA","cueDescription":"menundukkan kepala","content":"Tuhanku, Tuhanku...","startPage":2,"endPage":null,"isTrailingResolved":true}
+  ],
+  "trailingUnresolvedBlock": null
+}
+
+CONTOH 2 - Naskah dengan judul dan puisi:
+Input:
+--- PAGE 4 ---
+Cintaku Padamu seperti Sudut Lingkaran
+Bob : Berkali aku melukismu hanya gerimis yang tergores!
+Bas : Malam ini tak ada yang kubawa lari selain ingatan dan pagi berapi!
+============================
+Frank : Tidurlah, sebelum semuanya bicara masa lalu dan hantu-hantu gentayangan.
+
+Output:
+{
+  "mergedStartBlock": null,
+  "newBlocks": [
+    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Cintaku Padamu seperti Sudut Lingkaran","startPage":4,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Bob","cueDescription":null,"content":"Berkali aku melukismu hanya gerimis yang tergores!","startPage":4,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Bas","cueDescription":null,"content":"Malam ini tak ada yang kubawa lari selain ingatan dan pagi berapi!","startPage":4,"endPage":null,"isTrailingResolved":true},
+    {"type":"transition","characterName":null,"cueDescription":null,"content":"============================","startPage":4,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Frank","cueDescription":null,"content":"Tidurlah, sebelum semuanya bicara masa lalu dan hantu-hantu gentayangan.","startPage":4,"endPage":null,"isTrailingResolved":true}
+  ],
+  "trailingUnresolvedBlock": null
+}
+
+CONTOH 2 - Halaman cover dan dialog:
+Input:
+--- PAGE 1 ---
+Bangun Pagi Bahagia
+Andy Sri Wahyudi
+--- PAGE 2 ---
+********************* =============== *********************
+Bas : 1997, itu tadi adalah kegiatan masa remaja kami.
+Frank : Frank
+(Suara: suara gonggong anjing)
+Ibu : Basss...!!
+
+Output:
+{
+  "mergedStartBlock": null,
+  "newBlocks": [
+    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Bangun Pagi Bahagia","startPage":1,"endPage":null,"isTrailingResolved":true},
+    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Andy Sri Wahyudi","startPage":1,"endPage":null,"isTrailingResolved":true},
+    {"type":"transition","characterName":null,"cueDescription":null,"content":"********************* =============== *********************","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Bas","cueDescription":null,"content":"1997, itu tadi adalah kegiatan masa remaja kami.","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Frank","cueDescription":null,"content":"Frank","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"(Suara: suara gonggong anjing)","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Ibu","cueDescription":null,"content":"Basss...!!","startPage":2,"endPage":null,"isTrailingResolved":true}
+  ],
+  "trailingUnresolvedBlock": null
+}
+
+JANGAN tambahkan teks di luar JSON.
+"""
 
         let payload: [String: Any] = [
-            "model": "claude-sonnet-4-6",
+            "model": "claude-opus-4-6",
             "max_tokens": 100000,
             "system": systemPrompt + unresolvedContext,
             "messages": [
@@ -313,6 +428,7 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
             switch block.type {
             case "sceneHeader": return .sceneHeader
             case "dialogue": return .dialogue
+            case "transition": return .transition
             default: return .stageDirection
             }
         }()
