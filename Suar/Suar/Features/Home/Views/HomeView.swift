@@ -110,6 +110,7 @@ struct HomeView: View {
                 )
             }
         }
+        .disabled(viewModel.isImporting)
         .alert("Terjadi Kesalahan", isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
