@@ -240,9 +240,12 @@ Kamu adalah parser skenario drama. Ubah teks hasil OCR menjadi JSON.
 
 FORMAT INPUT:
 - Teks berada di antara marker "--- PAGE X ---" yang menunjukkan nomor halaman.
-- Setiap dialog tokoh ditandai dengan format: "N. TOKOH : isi dialog"
-- Petunjuk panggung/narasi dalam huruf KAPITAL semua.
-- Judul babak ditandai dengan "Bagian Pertama", "Bagian Kedua", dll.
+- Dialog tokoh ditandai dengan format: "NAMA : isi" di mana NAMA diikuti titik dua.
+  Contoh: "Bas : Isi dialog", "Frank : Isi dialog", "1. PRIA : Isi dialog", "Wanita : Isi dialog"
+  NAMA adalah case-insensitive: "Bas", "Frank", "1. PRIA", "WANITA" semua valid.
+- Jika setelah ":" kosong, dialogue content = baris-baris berikutnya (indent atau lanjutan) sampai tokoh berikutnya.
+- TEKS TANPA "NAMA :" = stageDirection (bukan dialogue). Contoh: judul puisi, narasi, puisi tanpa tokoh.
+- Baris yang hanya berisi karakter "=" atau "*" (atau keduanya) = transition block.
 
 FORMAT OUTPUT (HANYA JSON, tanpa markdown):
 {
@@ -251,29 +254,88 @@ FORMAT OUTPUT (HANYA JSON, tanpa markdown):
   "trailingUnresolvedBlock": <AIBlock> | null
 }
 
-ATURAN:
-1. Setiap "N. TOKOH :" di teks = SATU block dialogue dengan characterName="N. TOKOH" dan content=isi setelah ":" (bisa satu baris atau beberapa baris sampai tokoh berikutnya).
-2. Teks dalam huruf KAPITAL = block stageDirection (bukan dialogue).
-3. "Bagian X" = block sceneHeader.
-4. isTrailingResolved=true jika block UTUH (tidak terpotong). false jika terpotong di akhir halaman/chunk.
-5. Jangan pernah menggabungkan dua tokoh berbeda dalam satu block.
-6. Jangan pernah kosongkan field content — setiap dialogue HARUS punya isi teks.
-7. Block dengan isTrailingResolved=false di akhir chunk = trailingUnresolvedBlock.
+ATURAN (PENTING):
+1. SUATU BARIS = satu block. Tidak boleh gabung 2 baris berbeda jadi 1 block.
+2. BARIS DENGAN "NAMA :" = dialogue block. characterName=NAMA (isi sebelum ":"), content=isi setelah ":".
+   Jika setelah ":" kosong, AMBIL baris-baris berikutnya sebagai content.
+   STOP collect jika baris berikutnya memiliki "NAMA :" baru (tokoh berbeda) atau scene header.
+3. BARIS TANPA "NAMA :" (tidak ada titik dua setelah nama tokoh) = stageDirection.
+   Contoh: judul puisi, narasi tanpa tokoh, block parenthetical (Suara, etc.).
+4. Baris yang hanya berisi "=" atau "*" (contoh: "==================" atau "***** =============") = transition block.
+5. "Bagian Pertama/Kedua/Ketiga", "***", atau "Dramatis Personae" = sceneHeader.
+6. "(Suara: ...)" atau "(Suara...)" = stageDirection.
+   "(tersenyum)", "(mengangguk)" dalam dialogue = cueDescription.
+7. isTrailingResolved=true jika block UTUH, false jika terpotong.
+8. Jangan kosongkan field content.
 
-CONTOH:
+CONTOH 1 - Naskah dengan multi-line dialogue (ordinal + continue):
 Input:
---- PAGE 1 ---
-BAGIAN PERTAMA
-1. PRIA : Ini dialog pria.
-2. WANITA : (tersenyum) Ini dialog wanita.
+--- PAGE 2 ---
+1. PRIA
+(mengelus dada)
+Ya Tuhan. Oh ya Tuhaan.
+Tuhan atas
+segala duka. Tuhan atas
+semua jenis rasa sakit.
+1. PRIA
+(menundukkan kepala)
+Tuhanku, Tuhanku...
 
 Output:
 {
   "mergedStartBlock": null,
   "newBlocks": [
-    {"type":"sceneHeader","characterName":null,"cueDescription":null,"content":"BAGIAN PERTAMA","startPage":1,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"1. PRIA","cueDescription":null,"content":"Ini dialog pria.","startPage":1,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"2. WANITA","cueDescription":"tersenyum","content":"Ini dialog wanita.","startPage":1,"endPage":null,"isTrailingResolved":true}
+    {"type":"dialogue","characterName":"1. PRIA","cueDescription":"mengelus dada","content":"Ya Tuhan. Oh ya Tuhaan. Tuhan atas segala duka. Tuhan atas semua jenis rasa sakit.","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"1. PRIA","cueDescription":"menundukkan kepala","content":"Tuhanku, Tuhanku...","startPage":2,"endPage":null,"isTrailingResolved":true}
+  ],
+  "trailingUnresolvedBlock": null
+}
+
+CONTOH 2 - Naskah dengan judul dan puisi:
+Input:
+--- PAGE 4 ---
+Cintaku Padamu seperti Sudut Lingkaran
+Bob : Berkali aku melukismu hanya gerimis yang tergores!
+Bas : Malam ini tak ada yang kubawa lari selain ingatan dan pagi berapi!
+============================
+Frank : Tidurlah, sebelum semuanya bicara masa lalu dan hantu-hantu gentayangan.
+
+Output:
+{
+  "mergedStartBlock": null,
+  "newBlocks": [
+    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Cintaku Padamu seperti Sudut Lingkaran","startPage":4,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Bob","cueDescription":null,"content":"Berkali aku melukismu hanya gerimis yang tergores!","startPage":4,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Bas","cueDescription":null,"content":"Malam ini tak ada yang kubawa lari selain ingatan dan pagi berapi!","startPage":4,"endPage":null,"isTrailingResolved":true},
+    {"type":"transition","characterName":null,"cueDescription":null,"content":"============================","startPage":4,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Frank","cueDescription":null,"content":"Tidurlah, sebelum semuanya bicara masa lalu dan hantu-hantu gentayangan.","startPage":4,"endPage":null,"isTrailingResolved":true}
+  ],
+  "trailingUnresolvedBlock": null
+}
+
+CONTOH 2 - Halaman cover dan dialog:
+Input:
+--- PAGE 1 ---
+Bangun Pagi Bahagia
+Andy Sri Wahyudi
+--- PAGE 2 ---
+********************* =============== *********************
+Bas : 1997, itu tadi adalah kegiatan masa remaja kami.
+Frank : Frank
+(Suara: suara gonggong anjing)
+Ibu : Basss...!!
+
+Output:
+{
+  "mergedStartBlock": null,
+  "newBlocks": [
+    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Bangun Pagi Bahagia","startPage":1,"endPage":null,"isTrailingResolved":true},
+    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Andy Sri Wahyudi","startPage":1,"endPage":null,"isTrailingResolved":true},
+    {"type":"transition","characterName":null,"cueDescription":null,"content":"********************* =============== *********************","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Bas","cueDescription":null,"content":"1997, itu tadi adalah kegiatan masa remaja kami.","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Frank","cueDescription":null,"content":"Frank","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"(Suara: suara gonggong anjing)","startPage":2,"endPage":null,"isTrailingResolved":true},
+    {"type":"dialogue","characterName":"Ibu","cueDescription":null,"content":"Basss...!!","startPage":2,"endPage":null,"isTrailingResolved":true}
   ],
   "trailingUnresolvedBlock": null
 }
@@ -282,7 +344,7 @@ JANGAN tambahkan teks di luar JSON.
 """
 
         let payload: [String: Any] = [
-            "model": "claude-sonnet-4-6",
+            "model": "claude-opus-4-6",
             "max_tokens": 100000,
             "system": systemPrompt + unresolvedContext,
             "messages": [
@@ -366,6 +428,7 @@ JANGAN tambahkan teks di luar JSON.
             switch block.type {
             case "sceneHeader": return .sceneHeader
             case "dialogue": return .dialogue
+            case "transition": return .transition
             default: return .stageDirection
             }
         }()
