@@ -41,7 +41,7 @@ struct AllScriptsSection: View {
     var body: some View {
         VStack {
             HStack {
-                Text("All Scripts")
+                Text("Semua Naskah")
                     .bold()
                     .font(.title3)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -56,8 +56,7 @@ struct AllScriptsSection: View {
                     .pickerStyle(.inline)
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Color.themeRed)
+                        .font(.system(size: 19, weight: .semibold))
                         .frame(width: 36, height: 36)
                         .background(.ultraThickMaterial)
                         .clipShape(Circle())
