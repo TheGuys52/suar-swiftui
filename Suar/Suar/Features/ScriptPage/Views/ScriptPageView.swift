@@ -30,6 +30,7 @@ public struct ScriptPageView: View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 12) {
+                    // Search
                     Button {
                         withAnimation(.easeInOut(duration: 0.25)) {
                             viewModel.isSearching = true
@@ -41,38 +42,72 @@ public struct ScriptPageView: View {
                         Image(systemName: "magnifyingglass")
                     }
 
-                    Menu {
+                    if viewModel.isVoiceEditMode {
+                        // Stop button — hanya saat voice edit mode
                         Button {
-                            viewModel.openAudioNotes(recordImmediately: true)
+                            Task {
+                                await viewModel.saveAllVoiceEditedBlocks()
+                            }
+                            viewModel.toggleVoiceEditMode()
                         } label: {
-                            Label("Rekam catatan suara", systemImage: "mic.fill")
+                            Image(systemName: "stop.circle.fill")
+                                .font(.system(size: 24))
+                                .foregroundStyle(.red)
                         }
-                        .disabled(!viewModel.canAddAudioNotes)
+                        .accessibilityLabel("Simpan dan keluar dari mode edit suara")
+                    } else {
+                        // Menu
+                        Menu {
+                            Button {
+                                viewModel.openAudioNotes(recordImmediately: true)
+                            } label: {
+                                Label("Rekam catatan suara", systemImage: "mic.fill")
+                            }
+                            .disabled(!viewModel.canAddAudioNotes)
 
-                        Button {
-                            viewModel.openAudioNotes()
+                            Button {
+                                viewModel.openAudioNotes()
+                            } label: {
+                                Label("Catatan suara (\(viewModel.audioNoteCount))", systemImage: "waveform")
+                            }
+                            .disabled(!viewModel.canAddAudioNotes)
+
+                            Divider()
+
+                            Button {
+                                if viewModel.isEditMode {
+                                    Task { await viewModel.saveAllEditedBlocks() }
+                                }
+                                viewModel.toggleEditMode()
+                            } label: {
+                                Label(
+                                    viewModel.isEditMode ? "Selesai" : "Edit",
+                                    systemImage: viewModel.isEditMode ? "checkmark" : "pencil"
+                                )
+                            }
+
+                            if !viewModel.isEditMode {
+                                Divider()
+                                Button {
+                                    viewModel.toggleVoiceEditMode()
+                                } label: {
+                                    Label("Edit Suara", systemImage: "mic.fill")
+                                }
+                            }
+
+                            Divider()
+
+                            Button(role: .destructive) {
+                                showDeleteConfirmation = true
+                            } label: {
+                                Label("Hapus", systemImage: "trash")
+                            }
                         } label: {
-                            Label("Catatan suara (\(viewModel.audioNoteCount))", systemImage: "waveform")
+                            Image(systemName: "ellipsis.circle")
                         }
-                        .disabled(!viewModel.canAddAudioNotes)
-                        Divider()
-                        Button {
-                            viewModel.onEdit?()
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        Divider()
-                        Button(role: .destructive) {
-                            showDeleteConfirmation = true
-                        } label: {
-                            Label("Hapus", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
+                        .accessibilityLabel("Opsi naskah")
+                        .accessibilityIdentifier("reader.options")
                     }
-                    .accessibilityLabel("Opsi naskah")
-                    .accessibilityHint("Rekam atau buka catatan suara untuk halaman ini, edit, atau hapus naskah")
-                    .accessibilityIdentifier("reader.options")
                 }
             }
         }
@@ -181,6 +216,21 @@ public struct ScriptPageView: View {
             ProgressView("Memuat naskah...")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
+            if viewModel.isEditMode {
+                Text("Mode Edit — ketuk teks untuk mengubah")
+                    .font(.caption)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(Color.themeRed)
+            } else if viewModel.isVoiceEditMode {
+                Text("Mode Edit Suara — ketuk bagian kata untuk diubah")
+                    .font(.caption)
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 6)
+                    .background(Color.blue)
+            }
             scrollContent
         }
     }
@@ -214,11 +264,30 @@ private struct ScrollViewReaderContent: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     ForEach(viewModel.blocks) { block in
-                        ScriptLineRowView(
-                            block: block,
-                            searchText: blockMatchesSearch(block) ? searchText : nil
-                        )
-                        .id(block.id)
+                        if viewModel.isEditMode {
+                            EditableBlockRowView(block: block) { newContent in
+                                viewModel.markBlockDirty(blockId: block.id, content: newContent)
+                            }
+                            .id(block.id)
+                        } else if viewModel.isVoiceEditMode {
+                            VoiceEditBlockRowView(
+                                block: block,
+                                isSelected: viewModel.selectedVoiceEditBlockId == block.id,
+                                onTap: {
+                                    viewModel.selectVoiceEditBlock(block)
+                                },
+                                onVoiceEdit: { blockId, newContent in
+                                    viewModel.applyVoiceEditToBlock(id: blockId, content: newContent)
+                                }
+                            )
+                            .id(block.id)
+                        } else {
+                            ScriptLineRowView(
+                                block: block,
+                                searchText: blockMatchesSearch(block) ? searchText : nil
+                            )
+                            .id(block.id)
+                        }
                     }
                 }
                 .padding(.horizontal, 20)

@@ -15,9 +15,9 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
-
+    
     // MARK: - Fetch Operations
-
+    
     /// Mengambil seluruh naskah yang tersimpan, diurutkan dari yang terbaru diakses.
     public nonisolated func fetchAllScripts() async throws -> [Script] {
         try await withCheckedThrowingContinuation { continuation in
@@ -34,7 +34,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Mengambil daftar naskah terakhir diakses sesuai limit, diurutkan dari yang terbaru.
     public nonisolated func fetchRecentScripts(limit: Int) async throws -> [Script] {
         try await withCheckedThrowingContinuation { continuation in
@@ -52,7 +52,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Mencari naskah berdasarkan pencocokan judul (case-insensitive).
     public nonisolated func searchScripts(query: String) async throws -> [Script] {
         try await withCheckedThrowingContinuation { continuation in
@@ -71,7 +71,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Mengambil satu naskah lengkap beserta halaman dan blok dialog berdasarkan ID.
     public nonisolated func fetchScript(by id: UUID) async throws -> Script? {
         try await withCheckedThrowingContinuation { continuation in
@@ -88,9 +88,9 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     // MARK: - CRUD Operations
-
+    
     /// Menyimpan naskah baru hasil impor OCR/Parser ke database SwiftData.
     public nonisolated func save(script: Script) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -105,7 +105,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-
+    
     /// Memperbarui halaman terakhir yang dibaca dan timestamp akses.
     public nonisolated func updateLastReadPage(scriptId: UUID, pageNumber: Int) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -128,6 +128,30 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
+    
+    /// Mengupdate konten block berdasarkan ID
+    public nonisolated func updateBlock(blockId: UUID, content: String) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            Task { @MainActor in
+                do {
+                    let descriptor = FetchDescriptor<ScriptBlock>(
+                        predicate: #Predicate { $0.id == blockId }
+                    )
+                    guard let block = try modelContext.fetch(descriptor).first else {
+                        continuation.resume()
+                        return
+                    }
+                    block.content = content
+                    try modelContext.save()
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    // MARK: - Cascade Delete
 
     /// Menghapus naskah beserta seluruh halaman dan blok dialog terkait (cascade delete).
     public nonisolated func delete(script: Script) async throws {
@@ -165,9 +189,9 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
         }
     }
 
+    /// Helper: hapus audio notes terkait script, lalu hapus script (cascade SwiftData).
     @MainActor
     private func deleteScriptAndAudio(_ script: Script) throws {
-        // Flush reader progress before the deletion transaction so rollback preserves it.
         try modelContext.save()
         try AudioNoteFileStore().deletingScript(script.id) {
             modelContext.delete(script)
