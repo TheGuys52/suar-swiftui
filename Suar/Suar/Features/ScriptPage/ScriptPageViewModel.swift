@@ -49,55 +49,55 @@ public final class ScriptPageViewModel {
     public var searchText: String = ""
     public private(set) var searchResults: [SearchResult] = []
     public var currentSearchIndex: Int = 0
-
+    
     private let injectedRepository: ScriptRepositoryProtocol?
-
+    
     private var repository: ScriptRepositoryProtocol? {
         injectedRepository ?? DIContainer.shared.scriptRepository
     }
-
+    
     public init(scriptId: UUID, repository: ScriptRepositoryProtocol? = nil) {
         self.injectedRepository = repository
         self.isLoading = true
         Task { await loadScript(id: scriptId) }
     }
-
+    
     public init() {
         self.injectedRepository = nil
     }
-
+    
     public func goToNextPage() {
         guard currentPageNumber < totalPages else { return }
         currentPageNumber += 1
         loadBlocksForCurrentPage()
         persistCurrentPage()
     }
-
+    
     public func goToPreviousPage() {
         guard currentPageNumber > 1 else { return }
         currentPageNumber -= 1
         loadBlocksForCurrentPage()
         persistCurrentPage()
     }
-
+    
     public func didTapBack() {
         onBack?()
     }
-
+    
     // MARK: - Search
     public struct SearchResult: Identifiable {
         public let id = UUID()
         public let blockId: UUID
         public let pageNumber: Int
     }
-
+    
     public func performSearch(query: String) {
         searchText = query
         searchResults = []
         currentSearchIndex = 0
-
+        
         guard !query.isEmpty, let script = currentScript else { return }
-
+        
         for page in script.pages {
             for block in page.blocks {
                 if block.content.localizedCaseInsensitiveContains(query) {
@@ -106,31 +106,31 @@ public final class ScriptPageViewModel {
             }
         }
     }
-
+    
     public func nextSearchResult() {
         guard !searchResults.isEmpty else { return }
         currentSearchIndex = (currentSearchIndex + 1) % searchResults.count
         navigateToCurrentSearchResult()
     }
-
+    
     public func previousSearchResult() {
         guard !searchResults.isEmpty else { return }
         currentSearchIndex = (currentSearchIndex - 1 + searchResults.count) % searchResults.count
         navigateToCurrentSearchResult()
     }
-
+    
     public func dismissSearch() {
         isSearching = false
         searchText = ""
         searchResults = []
         currentSearchIndex = 0
     }
-
+    
     public func clearSearchResults() {
         searchResults = []
         currentSearchIndex = 0
     }
-
+    
     public func performDelete() async {
         guard let id = scriptId else { return }
         do {
@@ -140,7 +140,7 @@ public final class ScriptPageViewModel {
             errorMessage = "Naskah belum berhasil dihapus. \(error.localizedDescription)"
         }
     }
-
+    
     private func navigateToCurrentSearchResult() {
         guard currentSearchIndex < searchResults.count else { return }
         let result = searchResults[currentSearchIndex]
@@ -149,21 +149,21 @@ public final class ScriptPageViewModel {
             loadBlocksForCurrentPage()
         }
     }
-
+    
     private func loadScript(id: UUID) async {
         guard let repository else {
             errorMessage = "Repository belum dikonfigurasi."
             isLoading = false
             return
         }
-
+        
         do {
             guard let script = try await repository.fetchScript(by: id) else {
                 errorMessage = "Naskah tidak ditemukan."
                 isLoading = false
                 return
             }
-
+            
             self.currentScript = script
             self.scriptId = script.id
             self.scriptTitle = script.title
@@ -178,7 +178,7 @@ public final class ScriptPageViewModel {
             self.isLoading = false
         }
     }
-
+    
     private func loadBlocksForCurrentPage() {
         refreshAudioNoteCount()
         guard let script = currentScript else { blocks = []; return }
@@ -189,14 +189,14 @@ public final class ScriptPageViewModel {
         }
         blocks = page.blocks.sorted { $0.orderIndex < $1.orderIndex }
     }
-
+    
     private func persistCurrentPage() {
         guard let script = currentScript else { return }
         Task { try? await repository?.updateLastReadPage(scriptId: script.id, pageNumber: currentPageNumber) }
     }
     
     // MARK: - Edit Manual State
-
+    
     public var editedBlocks: [UUID: String] = [:]
     public var isEditMode: Bool = false
     public func toggleEditMode() {
@@ -207,7 +207,7 @@ public final class ScriptPageViewModel {
     public func markBlockDirty(blockId: UUID, content: String) {
         editedBlocks[blockId] = content
     }
-
+    
     public func saveAllEditedBlocks() async {
         for (blockId, content) in editedBlocks {
             try? await repository?.updateBlock(blockId: blockId, content: content)
@@ -247,5 +247,22 @@ public final class ScriptPageViewModel {
         }
         voiceEditedBlocks.removeAll()
         loadBlocksForCurrentPage()
+    }
+    
+    public func applyVoiceEditToBlock(id: UUID, content: String) {
+        // Update block.content langsung
+        for page in currentScript?.pages ?? [] {
+            if let block = page.blocks.first(where: { $0.id == id }) {
+                block.content = content
+                break
+            }
+        }
+        // Simpan ke dirty tracking untuk persistence
+        markVoiceBlockDirty(id: id, content: content)
+    }
+    
+    /// Ambil content override jika ada (untuk realtime update).
+    public func getOverrideContent(for blockId: UUID) -> String? {
+        return voiceEditedBlocks[blockId]
     }
 }

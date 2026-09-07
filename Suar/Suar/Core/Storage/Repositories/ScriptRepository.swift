@@ -129,6 +129,30 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
         }
     }
     
+    /// Mengupdate konten block berdasarkan ID
+    public nonisolated func updateBlock(blockId: UUID, content: String) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            Task { @MainActor in
+                do {
+                    let descriptor = FetchDescriptor<ScriptBlock>(
+                        predicate: #Predicate { $0.id == blockId }
+                    )
+                    guard let block = try modelContext.fetch(descriptor).first else {
+                        continuation.resume()
+                        return
+                    }
+                    block.content = content
+                    try modelContext.save()
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    // MARK: - Cascade Delete
+
     /// Menghapus naskah beserta seluruh halaman dan blok dialog terkait (cascade delete).
     public nonisolated func delete(script: Script) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -142,7 +166,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
-    
+
     /// Menghapus naskah berdasarkan ID beserta seluruh halaman dan blok dialog terkait (cascade delete).
     public nonisolated func delete(scriptId: UUID) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
@@ -161,6 +185,21 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
                 } catch {
                     continuation.resume(throwing: error)
                 }
+            }
+        }
+    }
+
+    /// Helper: hapus audio notes terkait script, lalu hapus script (cascade SwiftData).
+    @MainActor
+    private func deleteScriptAndAudio(_ script: Script) throws {
+        try modelContext.save()
+        try AudioNoteFileStore().deletingScript(script.id) {
+            modelContext.delete(script)
+            do {
+                try modelContext.save()
+            } catch {
+                modelContext.rollback()
+                throw error
             }
         }
     }

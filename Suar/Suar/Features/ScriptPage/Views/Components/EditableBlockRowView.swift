@@ -24,18 +24,15 @@ struct EditableBlockRowView: View {
                 dialogueRow
             case .stageDirection:
                 stageDirectionRow
-            case .parenthetical:
-                parentheticalRow
-            case .transition:
-                transitionRow
-                
+            default:
+                Text(block.content)
+                    .font(Font.custom("Courier", size: 18))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .onAppear {
             editedContent = block.content
-            if block.blockType == .characterName {
-                print("DEBUG: CHARACTER NAME block found - content: \(block.content)")
-            }
         }
         .onChange(of: block.content) { _, newValue in
             editedContent = newValue
@@ -115,38 +112,6 @@ struct EditableBlockRowView: View {
         TextField("Ketik...", text: $editedContent, axis: .vertical)
             .font(Font.custom("Courier", size: 18))
             .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .onChange(of: editedContent) { _, newValue in
-                if newValue != block.content {
-                    Task {
-                        await onSave(newValue)
-                    }
-                }
-            }
-    }
-    
-    // MARK: - Parenthetical
-    
-    private var parentheticalRow: some View {
-        TextField("Ketik...", text: $editedContent, axis: .vertical)
-            .font(.caption.italic())
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: 280, alignment: .center)
-            .multilineTextAlignment(.center)
-            .onChange(of: editedContent) { _, newValue in
-                if newValue != block.content {
-                    Task {
-                        await onSave(newValue)
-                    }
-                }
-            }
-    }
-    
-    // MARK: - Transition
-    
-    private var transitionRow: some View {
-        TextField("Ketik...", text: $editedContent, axis: .vertical)
-            .font(Font.custom("Courier", size: 18).bold())
             .frame(maxWidth: .infinity, alignment: .leading)
             .onChange(of: editedContent) { _, newValue in
                 if newValue != block.content {
