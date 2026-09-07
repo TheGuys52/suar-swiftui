@@ -59,16 +59,9 @@ public struct ScriptPageView: View {
                         // Menu
                         Menu {
                             Button {
-                                viewModel.openAudioNotes(recordImmediately: true)
-                            } label: {
-                                Label("Rekam catatan suara", systemImage: "mic.fill")
-                            }
-                            .disabled(!viewModel.canAddAudioNotes)
-
-                            Button {
                                 viewModel.openAudioNotes()
                             } label: {
-                                Label("Catatan suara (\(viewModel.audioNoteCount))", systemImage: "waveform")
+                                Label("Catatan Suara", systemImage: "waveform")
                             }
                             .disabled(!viewModel.canAddAudioNotes)
 
