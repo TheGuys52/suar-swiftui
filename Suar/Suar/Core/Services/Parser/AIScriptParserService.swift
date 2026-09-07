@@ -224,7 +224,10 @@ public final class AIScriptParserService: ScriptParserServiceProtocol {
             unresolvedContext = """
 
             --- CONTINUATION CONTEXT ---
-            Block berikut terpotong di akhir chunk sebelumnya. Jika baris pertama teks baru adalah kelanjutan dari block ini, GABUNGKAN isinya dan kembalikan sebagai "mergedStartBlock". Jika bukan kelanjutan, kembalikan null untuk mergedStartBlock.
+            Block berikut terpotong di akhir chunk sebelumnya.
+            Jika baris pertama teks baru adalah kelanjutan dari block ini,
+            GABUNGKAN isinya dan kembalikan sebagai "mergedStartBlock".
+            Jika bukan kelanjutan, kembalikan null untuk mergedStartBlock.
             Previous unresolved block:
               type: \(prev.type)
               characterName: \(prev.characterName ?? "null")
@@ -285,8 +288,24 @@ Output:
 {
   "mergedStartBlock": null,
   "newBlocks": [
-    {"type":"dialogue","characterName":"1. PRIA","cueDescription":"mengelus dada","content":"Ya Tuhan. Oh ya Tuhaan. Tuhan atas segala duka. Tuhan atas semua jenis rasa sakit.","startPage":2,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"1. PRIA","cueDescription":"menundukkan kepala","content":"Tuhanku, Tuhanku...","startPage":2,"endPage":null,"isTrailingResolved":true}
+    {
+      "type": "dialogue",
+      "characterName": "1. PRIA",
+      "cueDescription": "mengelus dada",
+      "content": "Ya Tuhan. Oh ya Tuhaan. Tuhan atas segala duka. Tuhan atas semua jenis rasa sakit.",
+      "startPage": 2,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "1. PRIA",
+      "cueDescription": "menundukkan kepala",
+      "content": "Tuhanku, Tuhanku...",
+      "startPage": 2,
+      "endPage": null,
+      "isTrailingResolved": true
+    }
   ],
   "trailingUnresolvedBlock": null
 }
@@ -304,11 +323,51 @@ Output:
 {
   "mergedStartBlock": null,
   "newBlocks": [
-    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Cintaku Padamu seperti Sudut Lingkaran","startPage":4,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"Bob","cueDescription":null,"content":"Berkali aku melukismu hanya gerimis yang tergores!","startPage":4,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"Bas","cueDescription":null,"content":"Malam ini tak ada yang kubawa lari selain ingatan dan pagi berapi!","startPage":4,"endPage":null,"isTrailingResolved":true},
-    {"type":"transition","characterName":null,"cueDescription":null,"content":"============================","startPage":4,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"Frank","cueDescription":null,"content":"Tidurlah, sebelum semuanya bicara masa lalu dan hantu-hantu gentayangan.","startPage":4,"endPage":null,"isTrailingResolved":true}
+    {
+      "type": "stageDirection",
+      "characterName": null,
+      "cueDescription": null,
+      "content": "Cintaku Padamu seperti Sudut Lingkaran",
+      "startPage": 4,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "Bob",
+      "cueDescription": null,
+      "content": "Berkali aku melukismu hanya gerimis yang tergores!",
+      "startPage": 4,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "Bas",
+      "cueDescription": null,
+      "content": "Malam ini tak ada yang kubawa lari selain ingatan dan pagi berapi!",
+      "startPage": 4,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "transition",
+      "characterName": null,
+      "cueDescription": null,
+      "content": "============================",
+      "startPage": 4,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "Frank",
+      "cueDescription": null,
+      "content": "Tidurlah, sebelum semuanya bicara masa lalu dan hantu-hantu gentayangan.",
+      "startPage": 4,
+      "endPage": null,
+      "isTrailingResolved": true
+    }
   ],
   "trailingUnresolvedBlock": null
 }
@@ -329,13 +388,69 @@ Output:
 {
   "mergedStartBlock": null,
   "newBlocks": [
-    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Bangun Pagi Bahagia","startPage":1,"endPage":null,"isTrailingResolved":true},
-    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"Andy Sri Wahyudi","startPage":1,"endPage":null,"isTrailingResolved":true},
-    {"type":"transition","characterName":null,"cueDescription":null,"content":"********************* =============== *********************","startPage":2,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"Bas","cueDescription":null,"content":"1997, itu tadi adalah kegiatan masa remaja kami.","startPage":2,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"Frank","cueDescription":null,"content":"Frank","startPage":2,"endPage":null,"isTrailingResolved":true},
-    {"type":"stageDirection","characterName":null,"cueDescription":null,"content":"(Suara: suara gonggong anjing)","startPage":2,"endPage":null,"isTrailingResolved":true},
-    {"type":"dialogue","characterName":"Ibu","cueDescription":null,"content":"Basss...!!","startPage":2,"endPage":null,"isTrailingResolved":true}
+    {
+      "type": "stageDirection",
+      "characterName": null,
+      "cueDescription": null,
+      "content": "********************* =============== *********************",
+      "startPage": 1,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "transition",
+      "characterName": null,
+      "cueDescription": null,
+      "content": "====================",
+      "startPage": 1,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "Bas",
+      "cueDescription": null,
+      "content": "1997, itu tadi adalah kegiatan masa remaja kami.",
+      "startPage": 2,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "Bas",
+      "cueDescription": null,
+      "content": "1997, itu tadi adalah kegiatan masa remaja kami.",
+      "startPage": 2,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "Frank",
+      "cueDescription": null,
+      "content": "Frank",
+      "startPage": 2,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "Ibu",
+      "cueDescription": null,
+      "content": "Bangun! Kau mau sampai kapan berbaring di sini?",
+      "startPage": 2,
+      "endPage": null,
+      "isTrailingResolved": true
+    },
+    {
+      "type": "dialogue",
+      "characterName": "Ibu",
+      "cueDescription": null,
+      "content": "Basss...!!",
+      "startPage": 2,
+      "endPage": null,
+      "isTrailingResolved": true
+    }
   ],
   "trailingUnresolvedBlock": null
 }

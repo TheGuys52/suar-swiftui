@@ -44,14 +44,23 @@ let page2 = ScriptPageMock(
         ScriptElementMock(
             type: .description,
             content: """
-            Hal yang pertama muncul adalah suara orang-orang: keramaian, atau lebih tepatnya, teriakan-teriakan yang kacau dan berisik. Seperti ada sekumpulan besar orang yang sedang meneriaki sesuatu. namun situasi panggung sangatlah gelap. bunyi-bunyian itu amat berisik. Seperti kerumunan massa yang tidak kenal lelah meneriakkan apa pun yang keluar dari mulut mereka. kemudian kegelapan perlahan diusir pergi, cahaya menyeruak. lampu menyala satu per satu. Tampak latar ruang tunggu. wujudnya serupa koridor yang panjang, dengan enam buah bangku tunggu kayu yang tampak dingin.
+            "Hal yang pertama muncul adalah suara orang-orang: keramaian, atau lebih tepatnya, teriakan-teriakan"
+            "yang kacau dan berisik. Seperti ada sekumpulan besar orang yang sedang meneriaki sesuatu. namun"
+            "situasi panggung sangatlah gelap. bunyi-bunyian itu amat berisik. Seperti kerumunan massa yang tidak"
+            "kenal lelah meneriakkan apa pun yang keluar dari mulut mereka. kemudian kegelapan perlahan diusir"
+            "pergi, cahaya menyeruak. lampu menyala satu per satu. Tampak latar ruang tunggu. wujudnya serupa"
+            "koridor yang panjang, dengan enam buah bangku tunggu kayu yang tampak dingin."
             """,
             order: 3
         ),
         ScriptElementMock(
             type: .description,
             content: """
-                Di atasnya, lampu-lampu pijar menyala dan menggantung tak berdaya. dinding di sisi belakang berwarna hijau kelabu. Terdapat sejumlah poster iklan, berita orang hilang, dan grafiti-grafiti kotor yang serampangan. dari samping kanan, seorang pemuda berjalan dengan hati-hati. Tampangnya kotor, gelisah, sorot matanya mengamati sekeliling dengan rasa takut yang kentara. Sejenak dia berhenti, lalu jalan lagi, lalu berhenti, lalu jalan lagi.
+                "Di atasnya, lampu-lampu pijar menyala dan menggantung tak berdaya. dinding di sisi belakang berwarna"
+                "hijau kelabu. Terdapat sejumlah poster iklan, berita orang hilang, dan grafiti-grafiti kotor yang"
+                "serampangan. dari samping kanan, seorang pemuda berjalan dengan hati-hati. Tampangnya kotor,"
+                "gelisah, sorot matanya mengamati sekeliling dengan rasa takut yang kentara. Sejenak dia berhenti,"
+                "lalu jalan lagi, lalu berhenti, lalu jalan lagi."
                 """,
             order: 4
         ),

@@ -17,6 +17,13 @@ public final class ScriptPageViewModel {
     public var isLoading: Bool = false
     public var errorMessage: String?
 
+    // MARK: - Edit State
+    public var isEditing: Bool = false
+    public var editingBlockId: UUID?
+    public var editingTexts: [UUID: String] = [:]
+    public var editingCueDescriptions: [UUID: String?] = [:]
+    private var savedBlocks: [UUID: (content: String, cueDescription: String?)] = [:]
+
     // MARK: - Search State
     public var isSearching: Bool = false
     public var searchText: String = ""
@@ -72,10 +79,8 @@ public final class ScriptPageViewModel {
         guard !query.isEmpty, let script = currentScript else { return }
 
         for page in script.pages {
-            for block in page.blocks {
-                if block.content.localizedCaseInsensitiveContains(query) {
-                    searchResults.append(SearchResult(blockId: block.id, pageNumber: page.pageNumber))
-                }
+            for block in page.blocks where block.content.localizedCaseInsensitiveContains(query) {
+                searchResults.append(SearchResult(blockId: block.id, pageNumber: page.pageNumber))
             }
         }
     }
@@ -107,6 +112,78 @@ public final class ScriptPageViewModel {
     public func performDelete() async {
         guard let id = scriptId else { return }
         try? await repository?.delete(scriptId: id)
+    }
+
+    // MARK: - Edit Mode
+    public func toggleEditMode() {
+        if isEditing {
+            // Cancel edit mode without saving
+            cancelEditing()
+        } else {
+            // Enter edit mode - save current state
+            isEditing = true
+            editingBlockId = nil
+            editingTexts = [:]
+            editingCueDescriptions = [:]
+            savedBlocks = [:]
+            for block in blocks {
+                savedBlocks[block.id] = (content: block.content, cueDescription: block.cueDescription)
+                editingTexts[block.id] = block.content
+                editingCueDescriptions[block.id] = block.cueDescription
+            }
+        }
+    }
+
+    public func selectBlockForEditing(_ blockId: UUID) {
+        editingBlockId = blockId
+    }
+
+    public func deselectBlock() {
+        editingBlockId = nil
+    }
+
+    public func updateEditingText(for blockId: UUID, text: String) {
+        editingTexts[blockId] = text
+    }
+
+    public func updateEditingCueDescription(for blockId: UUID, text: String?) {
+        editingCueDescriptions[blockId] = text
+    }
+
+    public func saveEdits() async {
+        guard isEditing else { return }
+
+        for block in blocks {
+            guard let newContent = editingTexts[block.id] else { continue }
+            let newCue = editingCueDescriptions[block.id] ?? block.cueDescription
+
+            // Only save if content actually changed
+            if newContent != block.content || newCue != block.cueDescription {
+                try? await repository?.updateBlock(blockId: block.id, content: newContent, cueDescription: newCue)
+            }
+        }
+
+        isEditing = false
+        editingBlockId = nil
+        editingTexts = [:]
+        editingCueDescriptions = [:]
+        savedBlocks = [:]
+        loadBlocksForCurrentPage()
+    }
+
+    public func cancelEditing() {
+        isEditing = false
+        editingBlockId = nil
+        editingTexts = [:]
+        editingCueDescriptions = [:]
+        // Restore saved state
+        for block in blocks {
+            if let saved = savedBlocks[block.id] {
+                block.content = saved.content
+                block.cueDescription = saved.cueDescription
+            }
+        }
+        savedBlocks = [:]
     }
 
     private func navigateToCurrentSearchResult() {

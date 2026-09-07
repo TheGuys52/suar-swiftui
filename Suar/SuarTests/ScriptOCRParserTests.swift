@@ -142,8 +142,8 @@ final class ScriptOCRParserTests: XCTestCase {
     func testMultiChunkPreservesOrderIndex() async throws {
         // Simulate 8 pages to force at least 2 chunks (chunkSize=4)
         var rawPages: [Int: String] = [:]
-        for i in 1...8 {
-            rawPages[i] = "BAGIAN \(i)\n\nPRIA : Dialog halaman \(i)."
+        for pageNum in 1...8 {
+            rawPages[pageNum] = "BAGIAN \(pageNum)\n\nPRIA : Dialog halaman \(pageNum)."
         }
 
         let script = try await parserService.parseScript(

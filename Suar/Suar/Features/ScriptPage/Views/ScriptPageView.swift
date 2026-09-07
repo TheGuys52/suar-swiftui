@@ -3,6 +3,7 @@ import SwiftUI
 
 public struct ScriptPageView: View {
     @Bindable var viewModel: ScriptPageViewModel
+    @State private var focusedBlockId: UUID?
     @FocusState private var searchFieldFocused: Bool
     @State private var showDeleteConfirmation = false
 
@@ -159,7 +160,7 @@ public struct ScriptPageView: View {
     }
 
     private var scrollContent: some View {
-        ScrollViewReaderContent(viewModel: viewModel, searchText: viewModel.searchText)
+        ScrollViewReaderContent(viewModel: viewModel, searchText: viewModel.searchText, focusedBlockId: $focusedBlockId)
     }
 
     private var sceneBlocks: [ScriptBlock] {
@@ -181,6 +182,7 @@ public struct ScriptPageView: View {
 private struct ScrollViewReaderContent: View {
     @Bindable var viewModel: ScriptPageViewModel
     let searchText: String
+    @Binding var focusedBlockId: UUID?
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -189,7 +191,18 @@ private struct ScrollViewReaderContent: View {
                     ForEach(viewModel.blocks) { block in
                         ScriptLineRowView(
                             block: block,
-                            searchText: blockMatchesSearch(block) ? searchText : nil
+                            searchText: blockMatchesSearch(block) ? searchText : nil,
+                            isEditModeActive: viewModel.isEditing,
+                            editingText: viewModel.editingTexts[block.id] ?? block.content,
+                            isFocused: focusedBlockId == block.id,
+                            onTextChange: { newText in
+                                viewModel.updateEditingText(for: block.id, text: newText)
+                            },
+                            onTap: {
+                                if viewModel.isEditing {
+                                    focusedBlockId = block.id
+                                }
+                            }
                         )
                         .id(block.id)
                     }
@@ -205,6 +218,11 @@ private struct ScrollViewReaderContent: View {
             }
             .onChange(of: viewModel.currentSearchIndex) { _, _ in
                 scrollToCurrentSearchResult(proxy: proxy)
+            }
+            .onChange(of: viewModel.isEditing) { _, isEditing in
+                if !isEditing {
+                    focusedBlockId = nil
+                }
             }
             .onAppear {
                 if let firstId = viewModel.blocks.first?.id {

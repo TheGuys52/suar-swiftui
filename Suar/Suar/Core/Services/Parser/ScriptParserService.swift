@@ -208,13 +208,13 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
         }
         
         var postResult: [String] = []
-        var i = 0
-        while i < result.count {
-            let line = result[i]
+        var index = 0
+        while index < result.count {
+            let line = result[index]
             if isStandaloneCharacterName(line) {
                 var merged = false
-                for j in (i + 1)..<result.count {
-                    let nextLine = result[j]
+                for innerIndex in (index + 1)..<result.count {
+                    let nextLine = result[innerIndex]
                     if isStandaloneCharacterName(nextLine) {
                         break
                     }
@@ -222,7 +222,7 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
                         break
                     }
                     postResult.append("\(line) : \(nextLine)")
-                    result[j] = ""
+                    result[innerIndex] = ""
                     merged = true
                     break
                 }
@@ -232,7 +232,7 @@ public final class ScriptParserService: ScriptParserServiceProtocol {
             } else {
                 postResult.append(line)
             }
-            i += 1
+            index += 1
         }
         
         return postResult.filter { !$0.isEmpty }

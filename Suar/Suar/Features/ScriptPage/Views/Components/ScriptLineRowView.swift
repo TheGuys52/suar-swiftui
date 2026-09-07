@@ -3,6 +3,11 @@ import SwiftUI
 struct ScriptLineRowView: View {
     let block: ScriptBlock
     var searchText: String?
+    var isEditModeActive: Bool = false
+    var editingText: String = ""
+    var isFocused: Bool = false
+    var onTextChange: ((String) -> Void)?
+    var onTap: (() -> Void)?
 
     var body: some View {
         switch block.blockType {
@@ -24,14 +29,35 @@ struct ScriptLineRowView: View {
     // MARK: - Scene Header
 
     private var sceneHeaderRow: some View {
-        highlightedText(block.content)
-            .font(.headline)
-            .bold()
-            .foregroundStyle(Color.themeRed)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 12)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Adegan. \(block.content)")
+        Group {
+            if isFocused {
+                TextField("Ketik adegan...", text: .constant(editingText))
+                    .font(.headline)
+                    .bold()
+                    .foregroundStyle(Color.themeRed)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 12)
+                    .textFieldStyle(.plain)
+                    .padding(8)
+                    .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
+                    .onChange(of: editingText) { _, newValue in
+                        onTextChange?(newValue)
+                    }
+            } else {
+                highlightedText(block.content)
+                    .font(.headline)
+                    .bold()
+                    .foregroundStyle(Color.themeRed)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 12)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Adegan. \(block.content)")
     }
 
     // MARK: - Character
@@ -64,11 +90,27 @@ struct ScriptLineRowView: View {
                     .foregroundStyle(.secondary)
             }
 
-            highlightedText(block.content)
-                .font(Font.custom("Courier", size: 18))
-                .foregroundStyle(.primary)
+            if isFocused {
+                TextField("Ketik dialog...", text: .constant(editingText))
+                    .font(Font.custom("Courier", size: 18))
+                    .foregroundStyle(.primary)
+                    .textFieldStyle(.plain)
+                    .padding(8)
+                    .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
+                    .onChange(of: editingText) { _, newValue in
+                        onTextChange?(newValue)
+                    }
+            } else {
+                highlightedText(block.content)
+                    .font(Font.custom("Courier", size: 18))
+                    .foregroundStyle(.primary)
+            }
         }
         .frame(maxWidth: 280, alignment: .center)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabelForDialogue)
     }
@@ -97,23 +139,61 @@ struct ScriptLineRowView: View {
     // MARK: - Stage Direction
 
     private var stageDirectionRow: some View {
-        highlightedText(block.content)
-            .font(Font.custom("Courier", size: 18))
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Arah panggung. \(block.content)")
+        Group {
+            if isFocused {
+                TextField("Ketik arah panggung...", text: .constant(editingText))
+                    .font(Font.custom("Courier", size: 18))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textFieldStyle(.plain)
+                    .padding(8)
+                    .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
+                    .onChange(of: editingText) { _, newValue in
+                        onTextChange?(newValue)
+                    }
+            } else {
+                highlightedText(block.content)
+                    .font(Font.custom("Courier", size: 18))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Arah panggung. \(block.content)")
     }
 
     // MARK: - Transition
 
     private var transitionRow: some View {
-        highlightedText(block.content)
-            .font(Font.custom("Courier", size: 18))
-            .bold()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Transisi. \(block.content)")
+        Group {
+            if isFocused {
+                TextField("Ketik transisi...", text: .constant(editingText))
+                    .font(Font.custom("Courier", size: 18))
+                    .bold()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textFieldStyle(.plain)
+                    .padding(8)
+                    .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
+                    .onChange(of: editingText) { _, newValue in
+                        onTextChange?(newValue)
+                    }
+            } else {
+                highlightedText(block.content)
+                    .font(Font.custom("Courier", size: 18))
+                    .bold()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onTap?()
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Transisi. \(block.content)")
     }
 
     // MARK: - Search Highlight

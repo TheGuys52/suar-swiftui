@@ -6,8 +6,10 @@ struct ScriptPageNavigationView: View {
     var body: some View {
         HStack(spacing: 0) {
             previousButton
-            Spacer()
             nextButton
+            Spacer()
+            editorButton
+            
         }
         .padding(.horizontal, 24)
     }
@@ -45,6 +47,7 @@ struct ScriptPageNavigationView: View {
                         isEnabled: viewModel.currentPageNumber < viewModel.totalPages
                     ))
                     .frame(width: 56, height: 56)
+                    .padding(10)
 
                 Image(systemName: "chevron.right")
                     .font(.title3)
@@ -61,6 +64,35 @@ struct ScriptPageNavigationView: View {
                 : "Halaman terakhir"
         )
     }
+    
+    private var editorButton: some View {
+        Button {
+            if viewModel.isEditing {
+                Task {
+                    await viewModel.saveEdits()
+                }
+            } else {
+                viewModel.toggleEditMode()
+            }
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(buttonBackground(isEnabled: true))
+                    .frame(width: 56, height: 56)
+                    .padding(10)
+
+                Image(systemName: viewModel.isEditing ? "checkmark" : "pencil")
+                    .font(.title)
+                    .bold()
+            }
+        }
+        .accessibilityLabel(viewModel.isEditing ? "Simpan perubahan" : "Edit halaman")
+        .accessibilityHint(
+            viewModel.isEditing
+                ? "Simpan semua perubahan yang telah diedit"
+                : "Aktifkan mode edit untuk mengubah teks halaman"
+        )
+    }
 
     private func buttonBackground(isEnabled: Bool) -> Color {
         isEnabled ? Color.themeRed : Color.gray.opacity(0.3)
@@ -72,8 +104,8 @@ struct ScriptPageNavigationView: View {
 }
 
 #Preview("First Page") {
-    let vm = ScriptPageViewModel()
-    vm.currentPageNumber = 1
-    vm.totalPages = 10
-    return ScriptPageNavigationView(viewModel: vm)
+    let viewModel = ScriptPageViewModel()
+    viewModel.currentPageNumber = 1
+    viewModel.totalPages = 10
+    return ScriptPageNavigationView(viewModel: viewModel)
 }

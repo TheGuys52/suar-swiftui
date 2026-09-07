@@ -165,4 +165,27 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
             }
         }
     }
+
+    /// Memperbarui konten satu blok dialog berdasarkan ID.
+    public nonisolated func updateBlock(blockId: UUID, content: String, cueDescription: String?) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            Task { @MainActor in
+                do {
+                    let descriptor = FetchDescriptor<ScriptBlock>(
+                        predicate: #Predicate { $0.id == blockId }
+                    )
+                    guard let block = try modelContext.fetch(descriptor).first else {
+                        continuation.resume()
+                        return
+                    }
+                    block.content = content
+                    block.cueDescription = cueDescription
+                    try modelContext.save()
+                    continuation.resume()
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
 }
