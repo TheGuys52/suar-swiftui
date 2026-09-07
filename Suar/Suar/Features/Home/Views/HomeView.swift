@@ -66,12 +66,13 @@ struct HomeView: View {
                                 isSearchFocused = false
                                 hideKeyboard()
                             } else {
-                                viewModel.didTapLibrary()
+                                viewModel.didTapShowOnboarding()
                             }
                         } label: {
                             Image(systemName: "questionmark")
                         }
                         .tint(Color.themeRed)
+                        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
 
                     }
                 }

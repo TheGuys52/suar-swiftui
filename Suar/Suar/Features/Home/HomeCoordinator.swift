@@ -7,13 +7,14 @@ public final class HomeCoordinator: CoordinatorProtocol {
     public var router: Router
     public let viewModel: HomeViewModel
     public var isPresentingImportPicker = false
-    
+    public var isPresentingOnboarding = false
+
     public init(router: Router) {
         self.router = router
         self.viewModel = HomeViewModel()
         configureBindings()
     }
-    
+
     @ViewBuilder
     public func start() -> some View {
         @Bindable var router = router
@@ -23,9 +24,12 @@ public final class HomeCoordinator: CoordinatorProtocol {
                 viewModel: viewModel,
                 isShowingFileImporter: $coordinator.isPresentingImportPicker
             )
+            .fullScreenCover(isPresented: $coordinator.isPresentingOnboarding) {
+                OnboardingCoverView(coordinator: self)
+            }
         }
     }
-    
+
     private func configureBindings() {
         viewModel.onImportTapped = { [weak self] in
             self?.isPresentingImportPicker = true
@@ -39,6 +43,10 @@ public final class HomeCoordinator: CoordinatorProtocol {
             self?.router.push(.library)
         }
 
+        viewModel.onShowOnboarding = { [weak self] in
+            self?.isPresentingOnboarding = true
+        }
+
         viewModel.onOpenScriptReader = { [weak self] script in
             self?.openScriptReader(script: script)
         }
@@ -47,5 +55,19 @@ public final class HomeCoordinator: CoordinatorProtocol {
     /// Navigasi ke halaman reader untuk script tertentu berdasarkan ID.
     public func openScriptReader(script: Script) {
         router.push(.reader(scriptId: script.id))
+    }
+
+    private struct OnboardingCoverView: View {
+        @Bindable var coordinator: HomeCoordinator
+        @State private var onboardingViewModel = OnboardingViewModel()
+
+        var body: some View {
+            OnboardingView(viewModel: onboardingViewModel)
+                .onAppear {
+                    onboardingViewModel.onFinish = {
+                        coordinator.isPresentingOnboarding = false
+                    }
+                }
+        }
     }
 }
