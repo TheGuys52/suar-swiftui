@@ -12,10 +12,10 @@ struct ContinueReadingSection: View {
     var onSelectScript: ((Script) -> Void)?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("Lanjut Membaca")
-                .bold()
-                .font(.title3)
+//                .bold()
+                .font(.custom("Georgia", size: 22, relativeTo: .title2))
                 .padding(.horizontal)
             
             if let lastOpenedScript = scripts.first {

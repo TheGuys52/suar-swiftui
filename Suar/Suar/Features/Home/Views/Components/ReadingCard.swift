@@ -21,8 +21,7 @@ struct ReadingCard: View {
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(script.title)
-                        .font(.title2)
-                        .bold()
+                        .font(.custom("Georgia", size: 22, relativeTo: .title2))
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                         .foregroundStyle(.white)

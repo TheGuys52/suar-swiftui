@@ -34,11 +34,11 @@ struct AllScriptsSection: View {
     }
 
     var body: some View {
-        VStack {
+        VStack(spacing: 12) {
             HStack {
                 Text("Semua Naskah")
-                    .bold()
-                    .font(.title3)
+//                    .bold()
+                    .font(.custom("Georgia", size: 22, relativeTo: .title2))
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 Menu {

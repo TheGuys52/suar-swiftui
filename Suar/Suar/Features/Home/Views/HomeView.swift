@@ -8,6 +8,25 @@ struct HomeView: View {
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
     
+    init(viewModel: HomeViewModel, isShowingFileImporter: Binding<Bool>) {
+        self.viewModel = viewModel
+        self._isShowingFileImporter = isShowingFileImporter
+        
+        if let georgia = UIFont(name: "Georgia", size: 34) {
+            UINavigationBar.appearance().largeTitleTextAttributes = [
+                .font: georgia,
+                .foregroundColor: UIColor(Color.themeTypo)
+            ]
+        }
+        
+//        if let georgiaSmall = UIFont(name: "Georgia", size: 17) {
+//            UINavigationBar.appearance().titleTextAttributes = [
+//                .font: georgiaSmall,
+//                .foregroundColor: UIColor(Color.themeTypo)
+//            ]
+//        }
+    }
+    
     private var filteredScripts: [Script] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         if query.isEmpty {
@@ -22,7 +41,7 @@ struct HomeView: View {
     var body: some View {
         ZStack {
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 28) {
                     // MARK: - Sections
                     ContinueReadingSection(
                         scripts: viewModel.recentScripts,
@@ -137,7 +156,7 @@ struct HomeView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.gray)
                 
-                TextField("Search", text: $searchText)
+                TextField("Cari Naskah", text: $searchText)
                     .focused($isSearchFocused)
                     .autocorrectionDisabled()
                 

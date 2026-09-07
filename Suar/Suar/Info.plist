@@ -26,6 +26,10 @@
 	<string>$(LLM_OLAGON_API_KEY)</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Suar menggunakan mikrofon untuk menyimpan catatan suara pada halaman naskah.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>georgia.ttf</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
