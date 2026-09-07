@@ -6,45 +6,69 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ReadingCard: View {
     let script: Script
     
     var body: some View {
         VStack {
-            HStack {
-                Image(systemName: "applescript")
-                    .font(.title)
-                    .foregroundStyle(.white)
-                    .padding(8)
-                    .background(Color.themeRed)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+            ZStack(alignment: .bottom) {
+                backgroundThumbnail
+                VStack {
+                    Text(script.title)
+                        .font(.title2)
+                        .bold()
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .foregroundStyle(.white)
+                    HStack {
+                        VStack {
+                            Text(pageText)
+                                .font(.caption)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .foregroundStyle(.white)
+
+                            ProgressView(value: progressValue)
+                                .tint(.white)
+
+                        }
+                        Text(progressText)
+                            .font(.title)
+                            .foregroundStyle(.white)
+
+                    }
+                }
+                .padding(8)
+                .background(Color.themeRed)
+                .shadow(radius: 8, y: -8)
                 
-                Text(script.title)
-                    .font(.headline)
-                    .bold()
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            ProgressView(value: progressValue)
-                .tint(Color.themeRed)
-            HStack {
-                Text(pageText)
-                    .font(.caption)
-                Spacer()
-                Text(progressText)
-                    .font(.caption)
+            .frame(width: 300, height: 150)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.themeRed, lineWidth: 2)
             }
-            .padding(.top)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilityLabel)
         }
-        .padding()
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.themeRed, lineWidth: 2)
+    }
+
+    @ViewBuilder
+    private var backgroundThumbnail: some View {
+        if let thumbnailData = script.thumbnailData,
+           let uiImage = UIImage(data: thumbnailData) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .scaledToFill()
+                .frame(height: 150)
+        } else {
+            Image("Bitmap")
+                .resizable()
+                .scaledToFill()
         }
-        .frame(width: 300)
     }
     
     private var progressValue: Double {
@@ -64,6 +88,14 @@ struct ReadingCard: View {
             return "0%"
         }
         return "\(Int((progressValue * 100).rounded()))%"
+    }
+
+    private var accessibilityLabel: String {
+        if script.pageCount > 0 {
+            return "Kartu naskah \(script.title). Bab \(script.lastReadPage) dari \(script.pageCount). Progres baca \(progressText) persen."
+        } else {
+            return "Kartu naskah \(script.title). Belum ada progres baca."
+        }
     }
 }
 

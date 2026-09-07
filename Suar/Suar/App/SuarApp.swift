@@ -39,6 +39,7 @@ struct SuarApp: App {
         WindowGroup {
             coordinator.start()
                 .preferredColorScheme(.light)
+                .environment(\.locale, Locale(identifier: "id-ID"))
         }
         .modelContainer(sharedModelContainer)
     }
