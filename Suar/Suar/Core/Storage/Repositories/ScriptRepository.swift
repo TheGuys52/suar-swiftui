@@ -9,8 +9,9 @@ import Foundation
 import SwiftData
 
 public actor ScriptRepository: ScriptRepositoryProtocol {
-    private let modelContext: ModelContext
-    
+    @MainActor private let modelContext: ModelContext
+
+    @MainActor
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
@@ -133,8 +134,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             Task { @MainActor in
                 do {
-                    modelContext.delete(script)
-                    try modelContext.save()
+                    try deleteScriptAndAudio(script)
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
@@ -156,34 +156,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
                         continuation.resume()
                         return
                     }
-                    modelContext.delete(script)
-                    try modelContext.save()
-                    continuation.resume()
-                } catch {
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-    }
-    
-    /// Mengupdate konten block berdasarkan ID
-    public nonisolated func updateBlock(blockId: UUID, content: String) async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            Task { @MainActor in
-                do {
-                    // TODO: fetch ScriptBlock by UUID
-                    let descriptor = FetchDescriptor<ScriptBlock>(
-                        predicate: #Predicate { $0.id == blockId }
-                    )
-                    let results = try modelContext.fetch(descriptor)
-                    guard let block = results.first else {
-                        continuation.resume()
-                        return
-                    }
-                    // Update Content
-                    block.content = content
-                    // Simpan
-                    try modelContext.save()
+                    try deleteScriptAndAudio(script)
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)

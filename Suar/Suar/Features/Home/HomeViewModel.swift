@@ -1,5 +1,7 @@
 import Foundation
 import Observation
+import PDFKit
+import UIKit
 
 @MainActor
 @Observable
@@ -59,6 +61,7 @@ public final class HomeViewModel {
                 sourceFileName: pdfURL.lastPathComponent,
                 onProgress: nil
             )
+            script.thumbnailData = generatePDFThumbnailData(from: pdfURL)
             
             try await repository.save(script: script)
             print("[Auto-Seed] Berhasil men-seed naskah: \(script.title)")
@@ -180,6 +183,7 @@ public final class HomeViewModel {
                     self?.progressStatusMessage = "Menganalisis struktur naskah (halaman \(currentPage)/\(totalPages))..."
                 }
             }
+            script.thumbnailData = generatePDFThumbnailData(from: url)
             
             // Step 3: Simpan naskah ke repository (0.90 - 1.0)
             progressStatusMessage = "Menyimpan naskah..."
@@ -196,5 +200,19 @@ public final class HomeViewModel {
             errorMessage = error.localizedDescription
             newlyProcessedScript = nil
         }
+    }
+
+    private func generatePDFThumbnailData(from url: URL) -> Data? {
+        if let pdfDocument = PDFDocument(url: url),
+           let pdfPage = pdfDocument.page(at: 0) {
+            let thumbnail = pdfPage.thumbnail(of: CGSize(width: 600, height: 360), for: .mediaBox)
+            return thumbnail.pngData()
+        }
+
+        if let image = UIImage(contentsOfFile: url.path) {
+            return image.pngData()
+        }
+
+        return nil
     }
 }

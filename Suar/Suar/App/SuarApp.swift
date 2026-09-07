@@ -17,7 +17,8 @@ struct SuarApp: App {
         let schema = Schema([
             Script.self,
             ScriptPage.self,
-            ScriptBlock.self
+            ScriptBlock.self,
+            AudioNote.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         
@@ -39,6 +40,7 @@ struct SuarApp: App {
         WindowGroup {
             coordinator.start()
                 .preferredColorScheme(.light)
+                .environment(\.locale, Locale(identifier: "id-ID"))
         }
         .modelContainer(sharedModelContainer)
     }

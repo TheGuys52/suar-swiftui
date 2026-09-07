@@ -17,6 +17,7 @@ public final class Script {
     public var lastReadPage: Int
     public var pageCount: Int
     public var sourceFileName: String
+    @Attribute(.externalStorage) public var thumbnailData: Data?
     
     @Relationship(deleteRule: .cascade, inverse: \ScriptPage.script)
     public var pages: [ScriptPage] = []
@@ -29,6 +30,7 @@ public final class Script {
         lastReadPage: Int = 1,
         pageCount: Int = 0,
         sourceFileName: String = "",
+        thumbnailData: Data? = nil,
         pages: [ScriptPage] = []
     ) {
         self.id = id
@@ -38,6 +40,7 @@ public final class Script {
         self.lastReadPage = lastReadPage
         self.pageCount = pageCount
         self.sourceFileName = sourceFileName
+        self.thumbnailData = thumbnailData
         self.pages = pages
     }
 }
