@@ -20,7 +20,7 @@ struct AllScriptList: View {
                     ForEach(scripts, id: \.id) { script in
                         ScriptRowView(
                             title: script.title,
-                            subtitle: script.sourceFileName
+                            subtitle: script.formattedCreatedAt
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
@@ -74,6 +74,16 @@ struct ScriptRowView: View {
             
             Divider()
         }
+    }
+}
+
+private extension Script {
+    var formattedCreatedAt: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "id-ID")
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: createdAt)
     }
 }
 

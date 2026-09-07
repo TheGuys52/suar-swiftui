@@ -17,7 +17,7 @@ struct ReadingCard: View {
                 backgroundThumbnail
                 VStack {
                     Text(script.title)
-                        .font(.title2)
+                        .font(.headline)
                         .bold()
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
@@ -26,7 +26,7 @@ struct ReadingCard: View {
                     HStack {
                         VStack {
                             Text(pageText)
-                                .font(.caption)
+                                .font(.caption2)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .foregroundStyle(.white)
 
@@ -35,7 +35,7 @@ struct ReadingCard: View {
 
                         }
                         Text(progressText)
-                            .font(.title)
+                            .font(.title3)
                             .foregroundStyle(.white)
 
                     }
@@ -45,7 +45,7 @@ struct ReadingCard: View {
                 .shadow(radius: 8, y: -8)
                 
             }
-            .frame(width: 300, height: 150)
+            .frame(width: 250, height: 150)
             .clipShape(RoundedRectangle(cornerRadius: 16))
             .overlay {
                 RoundedRectangle(cornerRadius: 16)
@@ -80,7 +80,7 @@ struct ReadingCard: View {
         guard script.pageCount > 0 else {
             return "Baru diimpor"
         }
-        return "Bab \(script.lastReadPage) dari \(script.pageCount)"
+        return "Halaman \(script.lastReadPage) dari \(script.pageCount)"
     }
     
     private var progressText: String {
@@ -92,7 +92,7 @@ struct ReadingCard: View {
 
     private var accessibilityLabel: String {
         if script.pageCount > 0 {
-            return "Kartu naskah \(script.title). Bab \(script.lastReadPage) dari \(script.pageCount). Progres baca \(progressText) persen."
+            return "Kartu naskah \(script.title). Halaman \(script.lastReadPage) dari \(script.pageCount). Progres baca \(progressText) persen."
         } else {
             return "Kartu naskah \(script.title). Belum ada progres baca."
         }
