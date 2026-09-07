@@ -16,6 +16,33 @@ public final class ScriptPageViewModel {
     private var scriptId: UUID?
     public var isLoading: Bool = false
     public var errorMessage: String?
+    var audioNotesViewModel: AudioNotesViewModel?
+    private(set) var audioNoteCount = 0
+
+    var canAddAudioNotes: Bool { currentPage != nil && DIContainer.shared.audioNoteRepository != nil }
+
+    private var currentPage: ScriptPage? {
+        currentScript?.pages.first { $0.pageNumber == currentPageNumber }
+    }
+
+    func openAudioNotes(recordImmediately: Bool = false) {
+        guard let page = currentPage, let script = currentScript,
+              let repository = DIContainer.shared.audioNoteRepository else { return }
+        audioNotesViewModel = AudioNotesViewModel(
+            pageID: page.id, scriptID: script.id, pageNumber: page.pageNumber,
+            repository: repository, recordOnOpen: recordImmediately
+        )
+    }
+
+    func refreshAudioNoteCount() {
+        guard let page = currentPage else { audioNoteCount = 0; return }
+        do {
+            audioNoteCount = try DIContainer.shared.audioNoteRepository?.fetchNotes(pageID: page.id).count ?? 0
+        } catch {
+            audioNoteCount = 0
+            errorMessage = "Catatan suara belum bisa dimuat. \(error.localizedDescription)"
+        }
+    }
 
     // MARK: - Search State
     public var isSearching: Bool = false
@@ -106,7 +133,12 @@ public final class ScriptPageViewModel {
 
     public func performDelete() async {
         guard let id = scriptId else { return }
-        try? await repository?.delete(scriptId: id)
+        do {
+            try await repository?.delete(scriptId: id)
+            didTapBack()
+        } catch {
+            errorMessage = "Naskah belum berhasil dihapus. \(error.localizedDescription)"
+        }
     }
 
     private func navigateToCurrentSearchResult() {
@@ -148,6 +180,7 @@ public final class ScriptPageViewModel {
     }
 
     private func loadBlocksForCurrentPage() {
+        refreshAudioNoteCount()
         guard let script = currentScript else { blocks = []; return }
         let sortedPages = script.pages.sorted { $0.pageNumber < $1.pageNumber }
         guard let page = sortedPages.first(where: { $0.pageNumber == currentPageNumber }) else {

@@ -78,7 +78,8 @@ final class ScriptOCRParserTests: XCTestCase {
         let script = try await parserService.parseScript(
             rawPagesText: rawPagesText,
             scriptTitle: scriptTitle,
-            sourceFileName: "\(fileName).\(fileExtension)"
+            sourceFileName: "\(fileName).\(fileExtension)",
+            onProgress: nil
         )
         
         // 4. Verifikasi Hasil Parsing
@@ -115,7 +116,8 @@ final class ScriptOCRParserTests: XCTestCase {
         let script = try await parserService.parseScript(
             rawPagesText: rawPages,
             scriptTitle: "Test Script",
-            sourceFileName: "test.txt"
+            sourceFileName: "test.txt",
+            onProgress: nil
         )
 
         let allBlocks = script.pages.flatMap { $0.blocks }
@@ -149,7 +151,8 @@ final class ScriptOCRParserTests: XCTestCase {
         let script = try await parserService.parseScript(
             rawPagesText: rawPages,
             scriptTitle: "Test Multi-Chunk",
-            sourceFileName: "test.txt"
+            sourceFileName: "test.txt",
+            onProgress: nil
         )
 
         let allBlocks = script.pages.flatMap { $0.blocks }
