@@ -3,49 +3,44 @@ import SwiftUI
 struct AllScriptsSection: View {
     let scripts: [Script]
     var onSelectScript: ((Script) -> Void)?
-    @State private var sortOption: SortOption = .newest
-    
+    @State private var sortOption: SortOption = .newestFirst
+
     enum SortOption: String, CaseIterable {
-        case newest
-        case oldest
-        case alphabeticalAZ
-        case alphabeticalZA
-        
+        case newestFirst
+        case oldestFirst
+        case alphabetical
+
         var title: String {
             switch self {
-            case .newest:
+            case .newestFirst:
                 return "Terbaru"
-            case .oldest:
+            case .oldestFirst:
                 return "Terlama"
-            case .alphabeticalAZ:
+            case .alphabetical:
                 return "Abjad (A-Z)"
-            case .alphabeticalZA:
-                return "Abjad (Z-A)"
             }
         }
-        
+
         var icon: String {
             switch self {
-            case .newest:
+            case .newestFirst:
                 return "clock.arrow.circlepath"
-            case .oldest:
+            case .oldestFirst:
                 return "clock"
-            case .alphabeticalAZ:
-                return "textformat.abc"
-            case .alphabeticalZA:
+            case .alphabetical:
                 return "textformat.abc"
             }
         }
     }
-    
+
     var body: some View {
-        VStack {
+        VStack(spacing: 12) {
             HStack {
-                Text("All Scripts")
-                    .bold()
-                    .font(.title3)
+                Text("Semua Naskah")
+//                    .bold()
+                    .font(.custom("Georgia", size: 22, relativeTo: .title2))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                
+
                 Menu {
                     Picker("Sort By", selection: $sortOption) {
                         ForEach(SortOption.allCases, id: \.self) { option in
@@ -56,8 +51,7 @@ struct AllScriptsSection: View {
                     .pickerStyle(.inline)
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(Color.themeRed)
+                        .font(.system(size: 19, weight: .semibold))
                         .frame(width: 36, height: 36)
                         .background(.ultraThickMaterial)
                         .clipShape(Circle())
@@ -67,27 +61,55 @@ struct AllScriptsSection: View {
                 .glassEffect()
             }
             .padding(.horizontal)
-            
+
             AllScriptList(
-                scripts: sortedScripts,
+                groupedScripts: groupedScripts,
                 onSelectScript: onSelectScript
             )
-            
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
-    private var sortedScripts: [Script] {
+
+    private var groupedScripts: [GroupedScript] {
         switch sortOption {
-        case .newest:
-            return scripts.sorted { $0.createdAt > $1.createdAt }
-        case .oldest:
-            return scripts.sorted { $0.createdAt < $1.createdAt }
-        case .alphabeticalAZ:
-            return scripts.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
-        case .alphabeticalZA:
-            return scripts.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedDescending }
+        case .alphabetical:
+            return groupByLetter(scripts: scripts)
+        case .newestFirst:
+            return groupByMonth(scripts: scripts, ascending: false)
+        case .oldestFirst:
+            return groupByMonth(scripts: scripts, ascending: true)
         }
+    }
+
+    private func groupByMonth(scripts: [Script], ascending: Bool) -> [GroupedScript] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM yyyy"
+
+        let sorted = scripts.sorted { $0.createdAt > $1.createdAt }
+        let grouped = Dictionary(grouping: sorted) { script in
+            formatter.string(from: script.createdAt)
+        }
+
+        let order = grouped.keys.sorted { key1, key2 in
+            let date1 = formatter.date(from: key1) ?? .distantPast
+            let date2 = formatter.date(from: key2) ?? .distantPast
+            return ascending ? date1 < date2 : date1 > date2
+        }
+
+        return order.map { label in
+            GroupedScript(
+                id: label,
+                label: label.uppercased(),
+                scripts: grouped[label] ?? []
+            )
+        }
+    }
+
+    private func groupByLetter(scripts: [Script]) -> [GroupedScript] {
+        let sorted = scripts.sorted {
+            $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+        }
+        return [GroupedScript(id: "all", label: "", scripts: sorted)]
     }
 }
 

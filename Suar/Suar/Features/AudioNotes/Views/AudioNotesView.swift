@@ -12,12 +12,8 @@ struct AudioNotesView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    recordingControls
-                }
-
-                Section {
+            VStack(spacing: 0) {
+                List {
                     if viewModel.notes.isEmpty {
                         Text("Belum ada rekaman")
                             .foregroundStyle(.secondary)
@@ -28,8 +24,12 @@ struct AudioNotesView: View {
                         }
                     }
                 }
+                .listStyle(.plain)
+                .safeAreaInset(edge: .bottom) {
+                    FloatingRecordButton(viewModel: viewModel)
+                        .padding(.bottom, 24)
+                }
             }
-            .listStyle(.plain)
             .navigationTitle("Catatan suara")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -100,47 +100,6 @@ struct AudioNotesView: View {
         }
     }
 
-    @ViewBuilder
-    private var recordingControls: some View {
-        if viewModel.audio.isRecording {
-            Button(action: viewModel.stopAndSave) {
-                HStack {
-                    Label("Hentikan", systemImage: "stop.circle.fill")
-                    Spacer()
-                    Text(AudioNotesViewModel.durationLabel(viewModel.audio.elapsed))
-                        .monospacedDigit()
-                        .foregroundStyle(.primary)
-                }
-                .frame(minHeight: 44)
-            }
-            .accessibilityLabel("Hentikan dan simpan rekaman")
-            .accessibilityValue(AudioNotesViewModel.durationLabel(viewModel.audio.elapsed))
-            .accessibilityIdentifier("audioNotes.stop")
-        } else if viewModel.pendingDraft != nil {
-            Label("Rekaman belum tersimpan", systemImage: "exclamationmark.circle")
-            Button(action: viewModel.savePendingDraft) {
-                Label("Coba simpan lagi", systemImage: "arrow.clockwise")
-                    .frame(minHeight: 44)
-            }
-            Button(role: .destructive) { showDiscardConfirmation = true } label: {
-                Label("Hapus draf", systemImage: "trash")
-                    .frame(minHeight: 44)
-            }
-        } else {
-            Button {
-                Task { await viewModel.startRecording() }
-            } label: {
-                Label(
-                    viewModel.isRequestingPermission ? "Meminta izin mikrofon…" : "Rekam",
-                    systemImage: "mic.fill"
-                )
-                .frame(minHeight: 44)
-            }
-            .disabled(viewModel.isRequestingPermission)
-            .accessibilityIdentifier("audioNotes.record")
-        }
-    }
-
     private func noteRow(_ note: AudioNote) -> some View {
         let isPlaying = viewModel.audio.playingNoteID == note.id && viewModel.audio.isPlaying
         return HStack(spacing: 12) {
@@ -192,5 +151,40 @@ struct AudioNotesView: View {
             .accessibilityIdentifier("audioNotes.options.\(note.id)")
         }
         .padding(.vertical, 4)
+    }
+}
+
+private struct FloatingRecordButton: View {
+    @Bindable var viewModel: AudioNotesViewModel
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Button {
+                if viewModel.audio.isRecording {
+                    viewModel.stopAndSave()
+                } else {
+                    Task { await viewModel.startRecording() }
+                }
+            } label: {
+                Image(systemName: viewModel.audio.isRecording ? "stop.fill" : "mic.fill")
+                    .font(.title)
+                    .foregroundStyle(.white)
+                    .frame(width: 64, height: 64)
+                    .background(Color.themeRed)
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
+            }
+            .disabled(viewModel.isRequestingPermission)
+            .accessibilityLabel(viewModel.audio.isRecording ? "Hentikan perekaman" : "Mulai merekam")
+            .accessibilityIdentifier("audioNotes.recordButton")
+
+            if viewModel.audio.isRecording {
+                Text(AudioNotesViewModel.durationLabel(viewModel.audio.elapsed))
+                    .font(.body.monospacedDigit())
+                    .foregroundStyle(.primary)
+                    .accessibilityLabel("Durasi perekaman \(AudioNotesViewModel.durationLabel(viewModel.audio.elapsed))")
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 }

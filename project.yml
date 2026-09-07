@@ -2,7 +2,7 @@ name: Suar
 options:
   bundleIdPrefix: com.dimasdaffa
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "26.0"
   generateEmptyDirectories: true
 
 packages:
@@ -21,6 +21,7 @@ targets:
     sources:
       - path: Suar/Suar
       - path: Suar/Suar/SupportingFiles/Font/CourierPrime-Regular.ttf
+      - path: Suar/Suar/SupportingFiles/Font/georgia.ttf
     info:
       path: Suar/Suar/Info.plist
       properties:

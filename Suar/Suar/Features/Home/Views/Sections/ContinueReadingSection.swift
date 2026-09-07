@@ -12,31 +12,21 @@ struct ContinueReadingSection: View {
     var onSelectScript: ((Script) -> Void)?
     
     var body: some View {
-        VStack {
-            Text("Continue Reading")
-                .bold()
-                .font(.title3)
-                .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Lanjut Membaca")
+//                .bold()
+                .font(.custom("Georgia", size: 22, relativeTo: .title2))
                 .padding(.horizontal)
             
-            if scripts.isEmpty {
-                ContinueReadingPlaceholderCard()
-            } else {
-                ScrollView(.horizontal) {
-                    HStack(spacing: 16) {
-                        ForEach(Array(scripts.prefix(3)), id: \.id) { script in
-                            ReadingCard(script: script)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    onSelectScript?(script)
-                                }
-                        }
-                        
+            if let lastOpenedScript = scripts.first {
+                ReadingCard(script: lastOpenedScript)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        onSelectScript?(lastOpenedScript)
                     }
-                    .padding(.vertical, 6)
                     .padding(.horizontal)
-                }
-                .scrollIndicators(.hidden)
+            } else {
+                ContinueReadingPlaceholderCard()
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
