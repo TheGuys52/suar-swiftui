@@ -19,7 +19,9 @@ public final class AppCoordinator: CoordinatorProtocol {
     public var router: Router
     private let homeCoordinator: HomeCoordinator
     private let onboardingCoordinator: OnboardingCoordinator
-    private var flow: AppFlow = .onboarding
+    private var flow: AppFlow = {
+        UserDefaults.standard.bool(forKey: "hasSeenOnboarding") ? .main : .onboarding
+    }()
 
     public init(router: Router = Router()) {
         self.router = router

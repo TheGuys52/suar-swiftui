@@ -15,6 +15,7 @@ public final class HomeViewModel {
     public var onSelectScript: ((UUID) -> Void)?
     public var onImportTapped: (() -> Void)?
     public var onLibraryTapped: (() -> Void)?
+    public var onShowOnboarding: (() -> Void)?
     /// Callback yang dipanggil saat user menekan "Buka Reader" di success alert. Coordinator menggunakan ini untuk navigasi ke reader.
     public var onOpenScriptReader: ((Script) -> Void)?
     public var progressPercentage: Double = 0.0
@@ -113,6 +114,10 @@ public final class HomeViewModel {
     
     public func didTapLibrary() {
         onLibraryTapped?()
+    }
+
+    public func didTapShowOnboarding() {
+        onShowOnboarding?()
     }
     
     /// Menghandle hasil dari file picker. Jika sukses, memanggil [processSelectedFile] untuk OCR + parse + save.

@@ -46,43 +46,25 @@ struct AllScriptsSection: View {
                     .font(.title3)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 
-                if #available(iOS 26.0, *) {
-                    Menu {
-                        Picker("Sort By", selection: $sortOption) {
-                            ForEach(SortOption.allCases, id: \.self) { option in
-                                Label(option.title, systemImage: option.icon)
-                                    .tag(option)
-                            }
+                Menu {
+                    Picker("Sort By", selection: $sortOption) {
+                        ForEach(SortOption.allCases, id: \.self) { option in
+                            Label(option.title, systemImage: option.icon)
+                                .tag(option)
                         }
-                        .pickerStyle(.inline)
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
-                            .font(.largeTitle)
-                            .foregroundStyle(Color.themeRed)
-                            .bold()
-                            .frame(width: 44, height: 44)
                     }
-                    .clipShape(Circle())
-                } else {
-                    Menu {
-                        Picker("Sort By", selection: $sortOption) {
-                            ForEach(SortOption.allCases, id: \.self) { option in
-                                Label(option.title, systemImage: option.icon)
-                                    .tag(option)
-                            }
-                        }
-                        .pickerStyle(.inline)
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .foregroundStyle(.white)
-                            .bold()
-                            .frame(width: 44, height: 44)
-                            .background(Color.themeRed)
-                            .clipShape(Circle())
-                            .shadow(radius: 8)
-                            .contentShape(Circle())
-                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    Image(systemName: "line.3.horizontal.decrease")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(Color.themeRed)
+                        .frame(width: 36, height: 36)
+                        .background(.ultraThickMaterial)
+                        .clipShape(Circle())
+                        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
                 }
+                .buttonStyle(.plain)
+                .glassEffect()
             }
             .padding(.horizontal)
             
