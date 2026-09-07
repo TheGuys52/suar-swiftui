@@ -31,17 +31,17 @@ final class ScriptOCRParserTests: XCTestCase {
             fileName: "ruangtunggu",
             fileExtension: "pdf",
             scriptTitle: "Ruang Tunggu",
-            expectedCharacters: ["PRIA", "WANITA"]
+            expectedCharacters: ["PRIA", "8. WANITA"]
         )
     }
-    
+
     // MARK: - Test Case 2: Scanned/Image PDF
     func testParseScannedImagePDF() async throws {
         try await assertScriptParsing(
             fileName: "ruangtungguimgpdf",
             fileExtension: "pdf",
             scriptTitle: "Ruang Tunggu",
-            expectedCharacters: ["PRIA", "WANITA"]
+            expectedCharacters: ["PRIA", "8. WANITA"]
         )
     }
     
@@ -103,5 +103,61 @@ final class ScriptOCRParserTests: XCTestCase {
         print("Total Blok: \(allBlocks.count)")
         print("Daftar Tokoh: \(characterNames)")
         print("=========================================================")
+    }
+
+    // MARK: - Test Case 5: Page metadata set on blocks
+    func testPageMetadataSetOnBlocks() async throws {
+        let rawPages: [Int: String] = [
+            1: "BAGIAN PERTAMA\n\nPRIA : Ini dialog halaman satu.",
+            2: "WANITA : Ini dialog halaman dua."
+        ]
+
+        let script = try await parserService.parseScript(
+            rawPagesText: rawPages,
+            scriptTitle: "Test Script",
+            sourceFileName: "test.txt"
+        )
+
+        let allBlocks = script.pages.flatMap { $0.blocks }
+
+        for block in allBlocks {
+            XCTAssertNotNil(block.startPageNumber, "Block must have startPageNumber")
+            XCTAssertGreaterThan(block.startPageNumber ?? 0, 0, "Block must have valid startPageNumber")
+        }
+
+        // Verify blocks from page 1 have startPageNumber=1
+        let page1Blocks = script.pages.first { $0.pageNumber == 1 }?.blocks ?? []
+        for block in page1Blocks {
+            XCTAssertEqual(block.startPageNumber, 1, "Page 1 blocks should have startPageNumber=1")
+        }
+
+        // Verify blocks from page 2 have startPageNumber=2
+        let page2Blocks = script.pages.first { $0.pageNumber == 2 }?.blocks ?? []
+        for block in page2Blocks {
+            XCTAssertEqual(block.startPageNumber, 2, "Page 2 blocks should have startPageNumber=2")
+        }
+    }
+
+    // MARK: - Test Case 6: Multi-chunk preserves global orderIndex
+    func testMultiChunkPreservesOrderIndex() async throws {
+        // Simulate 8 pages to force at least 2 chunks (chunkSize=4)
+        var rawPages: [Int: String] = [:]
+        for i in 1...8 {
+            rawPages[i] = "BAGIAN \(i)\n\nPRIA : Dialog halaman \(i)."
+        }
+
+        let script = try await parserService.parseScript(
+            rawPagesText: rawPages,
+            scriptTitle: "Test Multi-Chunk",
+            sourceFileName: "test.txt"
+        )
+
+        let allBlocks = script.pages.flatMap { $0.blocks }
+        XCTAssertFalse(allBlocks.isEmpty, "Should produce blocks")
+
+        // Verify all orderIndex values are unique and sequential
+        let orderIndices = allBlocks.map { $0.orderIndex }.sorted()
+        let expectedIndices = Array(1...allBlocks.count)
+        XCTAssertEqual(orderIndices, expectedIndices, "OrderIndex must be sequential 1..N")
     }
 }

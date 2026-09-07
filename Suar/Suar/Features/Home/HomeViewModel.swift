@@ -19,7 +19,6 @@ public final class HomeViewModel {
     public var onOpenScriptReader: ((Script) -> Void)?
     public var progressPercentage: Double = 0.0
     public var progressStatusMessage: String = ""
-    public var showSuccessAlert: Bool = false
     public var newlyProcessedScript: Script?
     public var currentScriptTitle: String = ""
     
@@ -195,12 +194,11 @@ public final class HomeViewModel {
             progressPercentage = 1.0
             
             newlyProcessedScript = script
-            showSuccessAlert = true
+            onOpenScriptReader?(script)
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
             newlyProcessedScript = nil
-            showSuccessAlert = false
         }
     }
 

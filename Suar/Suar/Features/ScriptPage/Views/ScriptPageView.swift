@@ -153,10 +153,6 @@ public struct ScriptPageView: View {
         if viewModel.isLoading {
             ProgressView("Memuat naskah...")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if viewModel.blocks.isEmpty {
-            Text("Tidak ada konten di halaman ini.")
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             scrollContent
         }
@@ -190,15 +186,6 @@ private struct ScrollViewReaderContent: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
-                    // Script title on page 1
-                    if viewModel.currentPageNumber == 1 {
-                        Text(viewModel.scriptTitle)
-                            .font(.title.bold())
-                            .foregroundStyle(Color.themeRed)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.bottom, 8)
-                    }
-
                     ForEach(viewModel.blocks) { block in
                         ScriptLineRowView(
                             block: block,

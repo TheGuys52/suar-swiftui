@@ -110,14 +110,7 @@ struct HomeView: View {
                 )
             }
         }
-        .alert("Naskah Berhasil Diproses", isPresented: $viewModel.showSuccessAlert) {
-            Button("Buka Reader") {
-                if let script = viewModel.newlyProcessedScript {
-                    viewModel.onOpenScriptReader?(script)
-                }
-            }
-            Button("Nanti Saja", role: .cancel) { }
-        }
+        .disabled(viewModel.isImporting)
         .alert("Terjadi Kesalahan", isPresented: .init(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
