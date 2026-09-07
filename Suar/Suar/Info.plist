@@ -22,13 +22,15 @@
 	<string>1.0.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>LLM_OLAGON_API_KEY</key>
+	<string>$(LLM_OLAGON_API_KEY)</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Suar menggunakan mikrofon untuk menyimpan catatan suara pada halaman naskah.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-	<key>LLM_OLAGON_API_KEY</key>
-	<string>$(LLM_OLAGON_API_KEY)</string>
 </dict>
 </plist>

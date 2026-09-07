@@ -29,6 +29,8 @@ targets:
         CFBundleShortVersionString: "1.0.0"
         CFBundleVersion: "1"
         CFBundleIconName: AppIcon # <-- Menghilangkan error CFBundleIconName missing
+        NSMicrophoneUsageDescription: "Suar menggunakan mikrofon untuk menyimpan catatan suara pada halaman naskah."
+        LLM_OLAGON_API_KEY: "$(LLM_OLAGON_API_KEY)"
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait

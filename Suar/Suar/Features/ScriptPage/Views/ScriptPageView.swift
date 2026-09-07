@@ -43,6 +43,20 @@ public struct ScriptPageView: View {
 
                     Menu {
                         Button {
+                            viewModel.openAudioNotes(recordImmediately: true)
+                        } label: {
+                            Label("Rekam catatan suara", systemImage: "mic.fill")
+                        }
+                        .disabled(!viewModel.canAddAudioNotes)
+
+                        Button {
+                            viewModel.openAudioNotes()
+                        } label: {
+                            Label("Catatan suara (\(viewModel.audioNoteCount))", systemImage: "waveform")
+                        }
+                        .disabled(!viewModel.canAddAudioNotes)
+                        Divider()
+                        Button {
                             viewModel.onEdit?()
                         } label: {
                             Label("Edit", systemImage: "pencil")
@@ -56,10 +70,16 @@ public struct ScriptPageView: View {
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
+                    .accessibilityLabel("Opsi naskah")
+                    .accessibilityHint("Rekam atau buka catatan suara untuk halaman ini, edit, atau hapus naskah")
+                    .accessibilityIdentifier("reader.options")
                 }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $viewModel.audioNotesViewModel, onDismiss: viewModel.refreshAudioNoteCount) { audioNotes in
+            AudioNotesView(viewModel: audioNotes)
+        }
         .accessibilityRotor(ScriptRotorType.scenes.rawValue, entries: {
             ForEach(sceneBlocks) { block in
                 AccessibilityRotorEntry(block.content, id: block.id)
@@ -79,11 +99,18 @@ public struct ScriptPageView: View {
             Button("Hapus", role: .destructive) {
                 Task {
                     await viewModel.performDelete()
-                    viewModel.didTapBack()
                 }
             }
         } message: {
             Text("Naskah ini akan dihapus secara permanen. Apakah Anda yakin?")
+        }
+        .alert("Terjadi kesalahan", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(viewModel.errorMessage ?? "")
         }
     }
 

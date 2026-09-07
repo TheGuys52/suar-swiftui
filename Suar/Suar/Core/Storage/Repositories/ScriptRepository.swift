@@ -9,8 +9,9 @@ import Foundation
 import SwiftData
 
 public actor ScriptRepository: ScriptRepositoryProtocol {
-    private let modelContext: ModelContext
+    @MainActor private let modelContext: ModelContext
 
+    @MainActor
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
@@ -133,8 +134,7 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             Task { @MainActor in
                 do {
-                    modelContext.delete(script)
-                    try modelContext.save()
+                    try deleteScriptAndAudio(script)
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
@@ -156,12 +156,26 @@ public actor ScriptRepository: ScriptRepositoryProtocol {
                         continuation.resume()
                         return
                     }
-                    modelContext.delete(script)
-                    try modelContext.save()
+                    try deleteScriptAndAudio(script)
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)
                 }
+            }
+        }
+    }
+
+    @MainActor
+    private func deleteScriptAndAudio(_ script: Script) throws {
+        // Flush reader progress before the deletion transaction so rollback preserves it.
+        try modelContext.save()
+        try AudioNoteFileStore().deletingScript(script.id) {
+            modelContext.delete(script)
+            do {
+                try modelContext.save()
+            } catch {
+                modelContext.rollback()
+                throw error
             }
         }
     }
