@@ -18,6 +18,9 @@ public final class ScriptPage {
     
     @Relationship(deleteRule: .cascade, inverse: \ScriptBlock.page)
     public var blocks: [ScriptBlock] = []
+
+    @Relationship(deleteRule: .cascade, inverse: \AudioNote.page)
+    public var audioNotes: [AudioNote] = []
     
     public init(
         id: UUID = UUID(),

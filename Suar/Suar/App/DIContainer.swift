@@ -11,6 +11,7 @@ public final class DIContainer: @unchecked Sendable {
     public static let shared: DIContainer = DIContainer()
 
     public var scriptRepository: ScriptRepositoryProtocol?
+    var audioNoteRepository: AudioNoteRepository?
     public lazy var ocrService: VisionOCRServiceProtocol = VisionOCRService()
     public lazy var parserService: ScriptParserServiceProtocol = ScriptParserService()
     lazy var scriptParserService: ScriptParserServiceProtocol = {
@@ -20,8 +21,10 @@ public final class DIContainer: @unchecked Sendable {
 
     private init() {}
 
+    @MainActor
     public func configure(modelContext: ModelContext) {
         if scriptRepository != nil { return }
         scriptRepository = ScriptRepository(modelContext: modelContext)
+        audioNoteRepository = AudioNoteRepository(container: modelContext.container)
     }
 }
