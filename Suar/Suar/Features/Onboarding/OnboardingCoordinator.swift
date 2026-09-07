@@ -27,6 +27,7 @@ public final class OnboardingCoordinator: CoordinatorProtocol {
 
     private func configureBindings() {
         viewModel.onFinish = { [weak self] in
+            UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
             self?.onCompleted?()
         }
     }
