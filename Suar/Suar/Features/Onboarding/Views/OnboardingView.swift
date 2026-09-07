@@ -85,12 +85,12 @@ public struct OnboardingView: View {
             Text(viewModel.primaryButtonTitle)
                 .font(.headline)
                 .fontWeight(.semibold)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 52)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .contentShape(Rectangle()) 
+                .background(Color.themeRed)
+                .clipShape(Capsule())
         }
-        .foregroundStyle(.white)
-        .background(Color.themeRed)
-        .clipShape(Capsule())
         .buttonStyle(.plain)
         .accessibleTouchTarget()
     }
