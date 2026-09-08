@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import SwiftData
+import UIKit
 
 @MainActor
 @Observable
@@ -224,11 +225,21 @@ public final class ScriptPageViewModel {
     public var voiceEditedBlocks: [UUID: String] = [:]
     
     public func toggleVoiceEditMode() {
-        isVoiceEditMode.toggle()
-        if !isVoiceEditMode {
-            selectedVoiceEditBlockId = nil
-            voiceEditedBlocks.removeAll()
-        }
+        if isVoiceEditMode {
+                // keluar mode — tidak perlu authorization
+                isVoiceEditMode = false
+                selectedVoiceEditBlockId = nil
+                voiceEditedBlocks.removeAll()
+            } else {
+                // masuk mode — cek authorization dulu
+                Task {
+                    let service = SpeechRecognitionService()
+                    let authorized = await service.requestAuthorization()
+                    if authorized {
+                        isVoiceEditMode = true
+                    }
+                }
+            }
     }
     
     // Pilih block untuk diedit suara
@@ -264,5 +275,19 @@ public final class ScriptPageViewModel {
     /// Ambil content override jika ada (untuk realtime update).
     public func getOverrideContent(for blockId: UUID) -> String? {
         return voiceEditedBlocks[blockId]
+    }
+    
+    // MARK: - Voice Edit with Announcement
+
+    public func selectBlockWithAnnouncement(blockId: UUID) {
+        UIAccessibility.post(
+            notification: .announcement,
+            argument: "Block dipilih. Sedang merekam. Katakan perintah untuk mengubah teks."
+        )
+        // State change setelah delay - recording mulai setelah announcement selesai
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+            self.isVoiceEditMode = true
+            self.selectedVoiceEditBlockId = blockId
+        }
     }
 }

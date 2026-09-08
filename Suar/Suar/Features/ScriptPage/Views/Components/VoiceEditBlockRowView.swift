@@ -46,7 +46,21 @@ struct VoiceEditBlockRowView: View {
                     .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
             }
             
-            blockContent
+            ZStack(alignment: .topLeading) {
+                blockContent
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(block.content)
+                
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        // Navigasi — biarkan VoiceOver baca teks
+                    }
+                    .onLongPressGesture(minimumDuration: 1.0) {
+                        onTap()
+                    }
+            }
+            
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())
@@ -66,18 +80,12 @@ struct VoiceEditBlockRowView: View {
         .onChange(of: isSelected) { _, newValue in
             if newValue && !hasAutoStarted {
                 hasAutoStarted = true
-                UIAccessibility.post(
-                    notification: .announcement,
-                    argument: "Block dipilih. Mulai bicara."
-                )
                 Task {
                     await startRecordingWithPermission()
                 }
             } else if !newValue {
                 hasAutoStarted = false
-                if speechService.isRecording {
-                    speechService.stopRecording()
-                }
+                speechService.stopRecording()
             }
         }
         .onChange(of: speechService.isRecording) { _, isRecording in
@@ -120,6 +128,7 @@ struct VoiceEditBlockRowView: View {
     private func applyVoiceEdit(_ transcript: String) {
         let original = block.content
         let lowercased = transcript.lowercased().trimmingCharacters(in: .whitespaces)
+        print("DEBUG: transcript='\(transcript)', lowercased='\(lowercased)'")
         
         var newContent: String
         // Add
@@ -128,18 +137,18 @@ struct VoiceEditBlockRowView: View {
             let textToAdd = words.count > 1 ? String(words[1]) : ""
             newContent = original + ". " + textToAdd
             // Update/Edit
-        } else if lowercased.contains("ganti") || lowercased.contains("ubah") {
+        } else if lowercased.contains("ganti") || lowercased.contains("ubah") || lowercased.contains("edit") {
             var parts: [String] = []
 
             if lowercased.contains("menjadi") {
-                    parts = lowercased.components(separatedBy: "menjadi")
-                } else if lowercased.contains("jadi") {
-                    parts = lowercased.components(separatedBy: "jadi")
-                } else if lowercased.contains(" ke ") {
-                    parts = lowercased.components(separatedBy: " ke ")
-                } else if lowercased.contains("dengan") {
-                    parts = lowercased.components(separatedBy: "dengan")
-                }
+                parts = lowercased.components(separatedBy: "menjadi")
+            } else if lowercased.contains("jadi") {
+                parts = lowercased.components(separatedBy: "jadi")
+            } else if lowercased.contains(" ke ") {
+                parts = lowercased.components(separatedBy: " ke ")
+            } else if lowercased.contains("dengan") {
+                parts = lowercased.components(separatedBy: "dengan")
+            }
 
             if parts.count == 2 {
                 let oldWord = parts[0]
@@ -149,6 +158,14 @@ struct VoiceEditBlockRowView: View {
                 let newWord = parts[1]
                     .trimmingCharacters(in: .whitespaces)
                 newContent = original.replacingOccurrences(of: oldWord, with: newWord, options: .caseInsensitive)
+            } else if lowercased.hasPrefix("ganti") || lowercased.hasPrefix("ubah") || lowercased.hasPrefix("edit") {
+                // Replace seluruh block — tidak ada connector, replace semuanya
+                let words = lowercased
+                    .replacingOccurrences(of: "ganti", with: "")
+                    .replacingOccurrences(of: "ubah", with: "")
+                    .replacingOccurrences(of: "edit", with: "")
+                    .trimmingCharacters(in: .whitespaces)
+                newContent = words
             } else {
                 newContent = original
             }
@@ -162,7 +179,7 @@ struct VoiceEditBlockRowView: View {
                 // Case-insensitive delete
                 newContent = original.replacingOccurrences(of: wordsToDelete, with: "", options: .caseInsensitive)
             }
-            
+        
         } else {
             newContent = transcript
         }
@@ -173,7 +190,7 @@ struct VoiceEditBlockRowView: View {
     private func announceResult(_ text: String) {
         UIAccessibility.post(
             notification: .announcement,
-            argument: "Teks diubah menjadi. \(text)"
+            argument: "Berhasil. Perubahan yang dilakukan: \(text)"
         )
     }
     
