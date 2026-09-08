@@ -18,7 +18,18 @@ struct VoiceEditBlockRowView: View {
     @State private var showPermissionAlert = false
     @State private var hasAutoStarted = false
     @State private var silenceTimer: Timer?
-    
+
+    private var blockTypeAccessibilityLabel: String {
+        switch block.blockType {
+        case .sceneHeader: return "Adegan"
+        case .characterName: return "Tokoh"
+        case .dialogue: return "Dialog"
+        case .stageDirection: return "Arah panggung"
+        case .transition: return "Transisi"
+        default: return "Teks"
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Recording indicator
@@ -128,7 +139,6 @@ struct VoiceEditBlockRowView: View {
     private func applyVoiceEdit(_ transcript: String) {
         let original = block.content
         let lowercased = transcript.lowercased().trimmingCharacters(in: .whitespaces)
-        print("DEBUG: transcript='\(transcript)', lowercased='\(lowercased)'")
         
         var newContent: String
         // Add

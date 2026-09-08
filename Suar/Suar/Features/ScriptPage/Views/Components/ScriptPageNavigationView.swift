@@ -27,12 +27,18 @@ struct ScriptPageNavigationView: View {
             }
         }
         .disabled(viewModel.currentPageNumber <= 1)
-        .accessibilityLabel("Halaman sebelumnya")
-        .accessibilityValue(
-            viewModel.currentPageNumber > 1
-                ? "Halaman \(viewModel.currentPageNumber - 1)"
-                : "Halaman pertama"
-        )
+        .accessibilityLabel(previousButtonAccesibilityLabel)
+        .accessibilityValue(previousButtonAccesibilityValue)
+    }
+    
+    private var previousButtonAccesibilityLabel: String {
+        ("Halaman Sebelumnya")
+    }
+    
+    private var previousButtonAccesibilityValue: String {
+        viewModel.currentPageNumber > 1
+            ? "Halaman \(viewModel.currentPageNumber - 1)"
+            : "Halaman pertama"
     }
 
     private var nextButton: some View {
@@ -54,12 +60,18 @@ struct ScriptPageNavigationView: View {
             }
         }
         .disabled(viewModel.currentPageNumber >= viewModel.totalPages)
-        .accessibilityLabel("Halaman berikutnya")
-        .accessibilityValue(
-            viewModel.currentPageNumber < viewModel.totalPages
-                ? "Halaman \(viewModel.currentPageNumber + 1)"
-                : "Halaman terakhir"
-        )
+        .accessibilityLabel(nextButtonAccesibilityLabel)
+        .accessibilityValue(nextButtonAccesibilityValue)
+    }
+    
+    private var nextButtonAccesibilityLabel: String {
+        ("Halaman Berikutnya")
+    }
+    
+    private var nextButtonAccesibilityValue: String {
+        viewModel.currentPageNumber < viewModel.totalPages
+            ? "Halaman \(viewModel.currentPageNumber + 1)"
+            : "Halaman terakhir"
     }
 
     private func buttonBackground(isEnabled: Bool) -> Color {

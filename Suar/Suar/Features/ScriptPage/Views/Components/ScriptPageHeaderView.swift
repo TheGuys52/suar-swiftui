@@ -27,9 +27,12 @@ struct ScriptPageHeaderView: View {
             .font(Font.custom("Courier", size: 20))
             .foregroundStyle(.primary)
             .bold()
-            .accessibilityLabel(
-                "Halaman \(viewModel.currentPageNumber) dari \(viewModel.totalPages)"
-            )
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(pageAccessibilityLabel)
+    }
+    
+    private var pageAccessibilityLabel: String {
+        "Halaman \(viewModel.currentPageNumber) dari \(viewModel.totalPages)"
     }
 
     private var pageIndicatorText: String {

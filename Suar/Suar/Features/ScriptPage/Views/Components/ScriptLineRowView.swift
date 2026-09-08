@@ -30,8 +30,12 @@ struct ScriptLineRowView: View {
             .foregroundStyle(Color.themeRed)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 12)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Adegan. \(block.content)")
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(sceneHeaderAccessibilityLabel)
+    }
+
+    private var sceneHeaderAccessibilityLabel: String {
+        "Adegan. \(block.content)"
     }
 
     // MARK: - Character
@@ -43,8 +47,12 @@ struct ScriptLineRowView: View {
             .foregroundStyle(Color.themeRed)
             .frame(maxWidth: .infinity, alignment: .center)
             .padding(.top, 6)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Tokoh. \(block.content)")
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(characterAccessibilityLabel)
+    }
+
+    private var characterAccessibilityLabel: String {
+        "Tokoh. \(block.content)"
     }
 
     // MARK: - Dialogue
@@ -69,16 +77,16 @@ struct ScriptLineRowView: View {
                 .foregroundStyle(.primary)
         }
         .frame(maxWidth: 280, alignment: .center)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(accessibilityLabelForDialogue)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(dialogueAccessibilityLabel)
     }
 
-    private var accessibilityLabelForDialogue: String {
-        var label = block.characterName ?? ""
+    private var dialogueAccessibilityLabel: String {
+        var label = "Dialog."
         if let cue = block.cueDescription {
-            label += ", \(cue)"
+            label = "Dialog. \(cue). "
         }
-        label += ". \(block.content)"
+        label += block.content
         return label
     }
 
@@ -90,8 +98,12 @@ struct ScriptLineRowView: View {
             .italic()
             .foregroundStyle(.secondary)
             .frame(maxWidth: 280, alignment: .center)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Keterangan. \(block.content)")
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(parentheticalAccessibilityLabel)
+    }
+
+    private var parentheticalAccessibilityLabel: String {
+        "Keterangan. \(block.content)"
     }
 
     // MARK: - Stage Direction
@@ -101,8 +113,12 @@ struct ScriptLineRowView: View {
             .font(Font.custom("Courier", size: 18))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Arah panggung. \(block.content)")
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(stageDirectionAccessibilityLabel)
+    }
+
+    private var stageDirectionAccessibilityLabel: String {
+        "Arah panggung. \(block.content)"
     }
 
     // MARK: - Transition
@@ -112,8 +128,12 @@ struct ScriptLineRowView: View {
             .font(Font.custom("Courier", size: 18))
             .bold()
             .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Transisi. \(block.content)")
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(transitionAccessibilityLabel)
+    }
+
+    private var transitionAccessibilityLabel: String {
+        "Transisi. \(block.content)"
     }
 
     // MARK: - Search Highlight

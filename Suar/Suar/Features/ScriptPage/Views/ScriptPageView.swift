@@ -24,9 +24,14 @@ public struct ScriptPageView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text("\(viewModel.currentPageNumber) / \(viewModel.totalPages)")
-                    .font(.headline.monospacedDigit())
-                    .foregroundStyle(.primary)
+                Group {
+                    Text("\(viewModel.currentPageNumber)/\(viewModel.totalPages)")
+                        .font(.headline.monospacedDigit())
+                        .foregroundStyle(.primary)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(pageNumberAccessibilityLabel)
+                .accessibilityAddTraits(.updatesFrequently)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 12) {
@@ -49,19 +54,25 @@ public struct ScriptPageView: View {
                                 await viewModel.saveAllVoiceEditedBlocks()
                             }
                             viewModel.toggleVoiceEditMode()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                    UIAccessibility.post(
+                                        notification: .announcement,
+                                        argument: "Berhasil keluar dari mode edit suara."
+                                    )
+                                }
                         } label: {
                             Image(systemName: "stop.circle.fill")
                                 .font(.system(size: 24))
                                 .foregroundStyle(.red)
                         }
-                        .accessibilityLabel("Simpan dan keluar dari mode edit suara")
+                        .accessibilityLabel(stopVoiceEditButtonLabel)
                     } else {
                         // Menu
                         Menu {
                             Button {
                                 viewModel.openAudioNotes()
                             } label: {
-                                Label("Catatan Suara", systemImage: "waveform")
+                                Label(catatanSuaraLabel, systemImage: "waveform")
                             }
                             .disabled(!viewModel.canAddAudioNotes)
                             
@@ -74,7 +85,7 @@ public struct ScriptPageView: View {
                                 viewModel.toggleEditMode()
                             } label: {
                                 Label(
-                                    viewModel.isEditMode ? "Selesai" : "Edit",
+                                    editMenuButtonLabel,
                                     systemImage: viewModel.isEditMode ? "checkmark" : "pencil"
                                 )
                             }
@@ -84,7 +95,7 @@ public struct ScriptPageView: View {
                                 Button {
                                     viewModel.toggleVoiceEditMode()
                                 } label: {
-                                    Label("Edit Suara", systemImage: "mic.fill")
+                                    Label(editSuaraLabel, systemImage: "mic.fill")
                                 }
                             }
                             
@@ -93,7 +104,7 @@ public struct ScriptPageView: View {
                             Button(role: .destructive) {
                                 showDeleteConfirmation = true
                             } label: {
-                                Label("Hapus", systemImage: "trash")
+                                Label(hapusLabel, systemImage: "trash")
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle")
@@ -141,6 +152,18 @@ public struct ScriptPageView: View {
             Text(viewModel.errorMessage ?? "")
         }
     }
+    
+    private var pageNumberAccessibilityLabel: String {
+        "Halaman \(viewModel.currentPageNumber) dari \(viewModel.totalPages)"
+    }
+    
+    private var catatanSuaraLabel: String { "Catatan Suara" }
+    private var editMenuButtonLabel: String {
+        viewModel.isEditMode ? "Selesai" : "Edit"
+    }
+    private var selesaiLabel: String { "Selesai" }
+    private var editSuaraLabel: String { "Edit Suara" }
+    private var hapusLabel: String { "Hapus" }
     
     // MARK: - Find Navigator
     private var findNavigator: some View {
@@ -210,19 +233,22 @@ public struct ScriptPageView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             if viewModel.isEditMode {
-                Text("Mode Edit — ketuk teks untuk mengubah")
+                Text("Edit Ketik — ketuk teks untuk mengubah")
                     .font(.caption)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
                     .background(Color.themeRed)
+                    .accessibilityLabel(editModeLabel)
             } else if viewModel.isVoiceEditMode {
-                Text("Mode Edit Suara — ketuk bagian kata untuk diubah")
+                Text("Edit Suara — ketuk bagian kata untuk diubah")
                     .font(.caption)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
                     .background(Color.blue)
+                    .accessibilityLabel(voiceEditModeLabel)
+                    .accessibilityHint(voiceEditModeHint)
             }
             scrollContent
         }
@@ -244,6 +270,23 @@ public struct ScriptPageView: View {
             seen.insert(name)
             return true
         }
+    }
+    
+    // MARK: - Accesibility Label
+    private var editModeLabel: String {
+        "Edit Ketik — ketuk teks untuk mengubah"
+    }
+    
+    private var voiceEditModeLabel: String {
+        "Edit Suara — ketuk bagian kata untuk diubah"
+    }
+    
+    private var stopVoiceEditButtonLabel: String {
+        "Simpan dan keluar dari Edit dengan Suara"
+    }
+    
+    private var voiceEditModeHint: String {
+        "Cara nya adalah pilih bagian teks, ketuk dua kali, lalu tekan dan tahan 1 detik untuk mengubah kata atau bagian tersebut dengan suara."
     }
 }
 
