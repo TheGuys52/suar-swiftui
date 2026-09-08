@@ -208,6 +208,13 @@ public final class HomeViewModel {
     }
 
     private func generatePDFThumbnailData(from url: URL) -> Data? {
+        let ext = url.pathExtension.lowercased()
+
+        // DOCX and DOC have no renderable thumbnail — skip
+        if ext == "docx" || ext == "doc" {
+            return nil
+        }
+
         if let pdfDocument = PDFDocument(url: url),
            let pdfPage = pdfDocument.page(at: 0) {
             let thumbnail = pdfPage.thumbnail(of: CGSize(width: 600, height: 360), for: .mediaBox)

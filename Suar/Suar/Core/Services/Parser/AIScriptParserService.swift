@@ -345,7 +345,7 @@ JANGAN tambahkan teks di luar JSON.
 
         let payload: [String: Any] = [
             "model": "claude-opus-4-6",
-            "max_tokens": 100000,
+            "max_tokens": 50000,
             "system": systemPrompt + unresolvedContext,
             "messages": [
                 ["role": "user", "content": content]
@@ -360,11 +360,17 @@ JANGAN tambahkan teks di luar JSON.
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
         request.timeoutInterval = 300
 
+        print("[AI-Parser] Sending request, content chars: \(content.count)")
+
         let (data, response) = try await URLSession.shared.data(for: request)
 
         print("[AI-Parser] Raw response: \(String(data: data, encoding: .utf8) ?? "nil")")
 
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        if httpResponse.statusCode != 200 {
+            print("[AI-Parser] HTTP error: \(httpResponse.statusCode), body: \(String(data: data, encoding: .utf8) ?? "nil")")
             throw URLError(.badServerResponse)
         }
 

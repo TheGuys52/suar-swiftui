@@ -9,7 +9,7 @@ import Foundation
 
 public enum OCRError: LocalizedError {
     case fileAccessDenied
-    case pdfCorrupted
+    case unsupportedFormat
     case emptyPageText
     case failedToRenderImage
     
@@ -17,8 +17,8 @@ public enum OCRError: LocalizedError {
         switch self {
         case .fileAccessDenied:
             return "Tidak dapat mengakses izin berkas PDF."
-        case .pdfCorrupted:
-            return "Berkas PDF rusak atau tidak dapat dibuka."
+        case .unsupportedFormat:
+            return "Berkas tidak didukung atau rusak."
         case .emptyPageText:
             return "Teks tidak ditemukan pada halaman naskah."
         case .failedToRenderImage:

@@ -12,6 +12,9 @@ packages:
   ViewInspector:
     url: https://github.com/nalexn/ViewInspector
     from: 0.10.0
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation
+    from: 0.9.0
 
 targets:
   Suar:
@@ -35,6 +38,27 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: org.openxmlformats.wordprocessingml.document
+            UTTypeDescription: Word Document
+            UTTypeConformsTo:
+              - public.data
+              - public.composite-content
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - docx
+              public.mime-type:
+                - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+          - UTTypeIdentifier: com.microsoft.word.doc
+            UTTypeDescription: Word Document (Legacy)
+            UTTypeConformsTo:
+              - public.data
+              - public.composite-content
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - doc
+              public.mime-type:
+                - application/msword
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon # <-- Mengubungkan Asset Catalog AppIcon
@@ -48,6 +72,7 @@ targets:
         product: Pulse
       - package: Pulse
         product: PulseUI
+      - package: ZIPFoundation
     preBuildScripts:
       - name: SwiftLint
         script: |
