@@ -26,6 +26,8 @@
 	<string>$(LLM_OLAGON_API_KEY)</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Suar menggunakan mikrofon untuk menyimpan catatan suara pada halaman naskah.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Suar menggunakan speech recognition untuk menyimpan catatan suara pada halaman naskah.</string>
 	<key>UILaunchScreen</key>
 	<dict/>
 	<key>UISupportedInterfaceOrientations</key>
