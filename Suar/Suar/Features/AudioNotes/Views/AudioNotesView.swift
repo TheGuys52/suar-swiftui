@@ -84,19 +84,27 @@ struct AudioNotesView: View {
             }
             .disabled(editedTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
-        .confirmationDialog("Hapus catatan suara?", isPresented: Binding(
+        // Alert konfirmasi hapus catatan
+        .alert("Hapus catatan suara?", isPresented: Binding(
             get: { noteToDelete != nil },
             set: { if !$0 { noteToDelete = nil } }
-        ), titleVisibility: .visible) {
-            Button("Hapus catatan", role: .destructive) {
+        )) {
+            Button("Batal", role: .cancel) {
+                noteToDelete = nil
+            }
+            Button("Hapus", role: .destructive) {
                 if let note = noteToDelete { viewModel.delete(note) }
                 noteToDelete = nil
             }
-            Button("Batal", role: .cancel) { noteToDelete = nil }
+        } message: {
+            Text("Apakah Anda yakin ingin menghapus catatan suara ini?")
         }
-        .confirmationDialog("Hapus rekaman yang belum tersimpan?", isPresented: $showDiscardConfirmation) {
-            Button("Hapus draf", role: .destructive) { viewModel.discardPendingDraft() }
+        // Alert konfirmasi hapus draf
+        .alert("Hapus rekaman yang belum tersimpan?", isPresented: $showDiscardConfirmation) {
             Button("Batal", role: .cancel) {}
+            Button("Hapus draf", role: .destructive) {
+                viewModel.discardPendingDraft()
+            }
         }
     }
 

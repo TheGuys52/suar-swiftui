@@ -2,6 +2,11 @@ import Observation
 import SwiftUI
 import UniformTypeIdentifiers
 
+extension UTType {
+    static let docx = UTType(importedAs: "org.openxmlformats.wordprocessingml.document")
+    static let doc = UTType(importedAs: "com.microsoft.word.doc")
+}
+
 struct HomeView: View {
     @Bindable var viewModel: HomeViewModel
     @Binding var isShowingFileImporter: Bool
@@ -108,7 +113,7 @@ struct HomeView: View {
         }
         .fileImporter(
             isPresented: $isShowingFileImporter,
-            allowedContentTypes: [.pdf, .jpeg, .png, .image],
+            allowedContentTypes: [.pdf, .jpeg, .png, .heic, .docx, .doc, .data],
             allowsMultipleSelection: false
         ) { result in
             switch result {

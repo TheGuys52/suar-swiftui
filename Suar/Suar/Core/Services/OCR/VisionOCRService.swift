@@ -8,7 +8,9 @@
 import Foundation
 import PDFKit
 import UIKit
+import UniformTypeIdentifiers
 import Vision
+import ZIPFoundation
 
 public final class VisionOCRService: VisionOCRServiceProtocol {
     
@@ -18,46 +20,69 @@ public final class VisionOCRService: VisionOCRServiceProtocol {
         from url: URL,
         onProgress: ((Double) -> Void)?
     ) async throws -> [Int: String] {
-        // 1. PATH PDF (Digital & Scanned PDF)
-        if let pdfDocument = PDFDocument(url: url) {
-            let totalPages = pdfDocument.pageCount
-            guard totalPages > 0 else {
-                throw OCRError.emptyPageText
-            }
-            
+        // Check magic bytes first to avoid PDFDocument succeeding on non-PDF files
+        let magicBytes = try Data(contentsOf: url, options: .mappedIfSafe)
+
+        // 1. PATH DOCX — ZIP (PK) based, check before PDF
+        if isZIPArchive(data: magicBytes) && isWordDocument(url: url) {
+            print("[VisionOCR] Processing DOCX: \(url.lastPathComponent)")
+            let extractor = DOCXTextExtractor()
+            let result = try await extractor.extractText(from: url)
+            print("[VisionOCR] DOCX extracted: \(result.count) pages, page1 chars: \(result[1]?.count ?? 0)")
+            onProgress?(1.0)
+            return result
+        }
+
+        // 2. PATH DOC — legacy binary Word format
+        if isLegacyDoc(url: url) {
+            print("[VisionOCR] Processing DOC: \(url.lastPathComponent)")
+            let attributedString = try NSAttributedString(
+                url: url,
+                options: [:],
+                documentAttributes: nil
+            )
+            let text = attributedString.string
+            print("[VisionOCR] DOC extracted: \(text.count) chars")
+            onProgress?(1.0)
+            return [1: text]
+        }
+
+        // 3. PATH PDF (Digital & Scanned PDF)
+        if let pdfDocument = PDFDocument(url: url),
+           pdfDocument.pageCount > 0 {
             var rawPagesText: [Int: String] = [:]
-            
-            for pageIndex in 0..<totalPages {
+
+            for pageIndex in 0..<pdfDocument.pageCount {
                 let pageNum = pageIndex + 1
                 guard let pdfPage = pdfDocument.page(at: pageIndex) else { continue }
-                
-                // FAST PATH: PDF berbasis teks digital
+
                 if let directText = pdfPage.string,
                    !directText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     rawPagesText[pageNum] = directText
                 } else {
-                    // FALLBACK PATH: Vision OCR jika PDF berbasis gambar/scan
                     let recognizedText = try await recognizeTextFromVision(pdfPage: pdfPage)
                     rawPagesText[pageNum] = recognizedText
                 }
-                
-                let progress = Double(pageNum) / Double(totalPages)
+
+                let progress = Double(pageNum) / Double(pdfDocument.pageCount)
                 onProgress?(progress)
             }
-            
+
             return rawPagesText
         }
-        
-        // 2. PATH GAMBAR MURNI (.jpg, .png, dll)
+
+        // 4. PATH GAMBAR MURNI (.jpg, .png, .heic, dll)
         if let uiImage = UIImage(contentsOfFile: url.path),
            let cgImage = uiImage.cgImage {
+            print("[VisionOCR] Processing as image: \(url.lastPathComponent)")
             let recognizedText = try await recognizeTextFromCGImage(cgImage)
+            print("[VisionOCR] Image OCR result: \(recognizedText.count) chars")
             onProgress?(1.0)
             return [1: recognizedText]
         }
-        
-        // 3. Throw Error jika bukan PDF maupun Gambar yang valid
-        throw OCRError.pdfCorrupted
+
+        // 5. Throw Error jika bukan format yang didukung
+        throw OCRError.unsupportedFormat
     }
     
     // MARK: - Helper Vision OCR dari PDF Page
@@ -123,5 +148,25 @@ public final class VisionOCRService: VisionOCRServiceProtocol {
                 continuation.resume(throwing: error)
             }
         }
+    }
+
+    // MARK: - File Format Detection
+    private let wordDocumentType = UTType(importedAs: "org.openxmlformats.wordprocessingml.document")
+    private let legacyDocType = UTType(importedAs: "com.microsoft.word.doc")
+
+    /// PK = ZIP archive magic bytes (DOCX is a ZIP)
+    private func isZIPArchive(data: Data) -> Bool {
+        guard data.count >= 2 else { return false }
+        return data[0] == 0x50 && data[1] == 0x4B
+    }
+
+    private func isWordDocument(url: URL) -> Bool {
+        if url.pathExtension.lowercased() == "docx" { return true }
+        return (try? url.resourceValues(forKeys: [.contentTypeKey]))?.contentType?.conforms(to: wordDocumentType) ?? false
+    }
+
+    private func isLegacyDoc(url: URL) -> Bool {
+        if url.pathExtension.lowercased() == "doc" { return true }
+        return (try? url.resourceValues(forKeys: [.contentTypeKey]))?.contentType?.conforms(to: legacyDocType) ?? false
     }
 }
