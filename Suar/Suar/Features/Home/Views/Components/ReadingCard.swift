@@ -12,11 +12,6 @@ struct ReadingCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Label atas
-            Text("Terakhir dibuka")
-                .font(.caption)
-                .foregroundStyle(.white.opacity(0.8))
-            
             // Bagian utama: Judul, Halaman, dan Chevron
             HStack(alignment: .center, spacing: 12) {
                 VStack(alignment: .leading, spacing: 6) {
@@ -79,14 +74,19 @@ struct ReadingCard: View {
 
     private var accessibilityLabel: String {
         if script.pageCount > 0 {
-            return "Terakhir dibuka, naskah \(script.title). Halaman \(script.lastReadPage) dari \(script.pageCount). Progres baca \(progressText) persen."
+            return "Terakhir dibuka, naskah \(script.title). Halaman \(script.lastReadPage) dari \(script.pageCount). Progres baca \(progressText)"
         } else {
             return "Terakhir dibuka, naskah \(script.title). Belum ada progres baca."
         }
     }
 }
 
-#Preview {
-    ReadingCard(script: Script(title: "Ruang Tunggu"))
+#Preview("With Progress") {
+    ReadingCard(script: Script(title: "Ruang Tunggu", createdAt: Date(), lastReadPage: 12, pageCount: 24))
+        .padding()
+}
+
+#Preview("No Progress") {
+    ReadingCard(script: Script(title: "Naskah Baru", createdAt: Date(), lastReadPage: 1, pageCount: 0))
         .padding()
 }

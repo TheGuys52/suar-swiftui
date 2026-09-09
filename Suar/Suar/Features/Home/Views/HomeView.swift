@@ -54,7 +54,17 @@ struct HomeView: View {
                             handleScriptSelection(script)
                         }
                     )
-                    
+
+                    if viewModel.processingPhase != .idle {
+                        ProcessingInlineCard(
+                            scriptTitle: viewModel.currentScriptTitle,
+                            phase: viewModel.processingPhase,
+                            onRetry: { viewModel.retryLastProcessing() }
+                        )
+                        .padding(.horizontal)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+
                     AllScriptsSection(
                         scripts: filteredScripts,
                         onSelectScript: { script in
@@ -124,17 +134,7 @@ struct HomeView: View {
                 viewModel.handleSelectedFile(result: .failure(error))
             }
         }
-        .overlay {
-            if viewModel.isImporting {
-                ProcessingProgressView(
-                    scriptTitle: viewModel.currentScriptTitle,
-                    progress: viewModel.progressPercentage,
-                    statusMessage: viewModel.progressStatusMessage
-                )
-            }
-        }
-        .disabled(viewModel.isImporting)
-        .alert("Terjadi Kesalahan", isPresented: .init(
+        .alert("Terjadi Kesalahan", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
@@ -143,7 +143,7 @@ struct HomeView: View {
             Text(viewModel.errorMessage ?? "")
         }
     }
-    
+
     // MARK: - Helpers & Subviews
     
     private var helpButtonAccessibilityLabel: String {
@@ -214,9 +214,25 @@ private var addLabel: String {
     "Tambah Naskah"
 }
 
-#Preview {
-    HomeView(
-        viewModel: HomeViewModel(),
-        isShowingFileImporter: .constant(false)
-    )
+#Preview("Empty") {
+    HomeView(viewModel: HomeViewModel(), isShowingFileImporter: .constant(false))
+}
+
+#Preview("Processing") {
+    let vm = HomeViewModel()
+    vm.currentScriptTitle = "Ruang Tunggu"
+    vm.processingPhase = .parsing(current: 4, total: 9)
+    return HomeView(viewModel: vm, isShowingFileImporter: .constant(false))
+}
+
+#Preview("With Data") {
+    let vm = HomeViewModel()
+    vm.recentScripts = [
+        Script(title: "Ruang Tunggu", createdAt: Date(), lastReadPage: 12, pageCount: 24)
+    ]
+    vm.allScripts = [
+        Script(title: "Ruang Tunggu - Bagian 1", createdAt: Date(), lastReadPage: 1, pageCount: 24),
+        Script(title: "Ruang Tunggu - Bagian 2", createdAt: Date().addingTimeInterval(-86400), lastReadPage: 1, pageCount: 18)
+    ]
+    return HomeView(viewModel: vm, isShowingFileImporter: .constant(false))
 }

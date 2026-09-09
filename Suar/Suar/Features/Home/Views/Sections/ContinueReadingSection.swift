@@ -13,7 +13,7 @@ struct ContinueReadingSection: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Lanjut Membaca")
+            Text("Terakhir Dibuka")
 //                .bold()
                 .font(.custom("Georgia", size: 22, relativeTo: .title2))
                 .padding(.horizontal)
@@ -35,7 +35,7 @@ struct ContinueReadingSection: View {
 }
 
 private var continueReadingLabel: String {
-    "Lanjut Membaca"
+    "Terakhir dibuka"
 }
 
 private struct ContinueReadingPlaceholderCard: View {
@@ -61,6 +61,12 @@ private struct ContinueReadingPlaceholderCard: View {
     }
 }
 
-#Preview {
+#Preview("Empty") {
     ContinueReadingSection(scripts: [])
+}
+
+#Preview("With Data") {
+    ContinueReadingSection(scripts: [
+        Script(title: "Ruang Tunggu", createdAt: Date(), lastReadPage: 12, pageCount: 24)
+    ])
 }
