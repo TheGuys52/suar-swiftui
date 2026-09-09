@@ -95,6 +95,9 @@ struct ScriptRowView: View {
 
             Divider()
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityAddTraits(.isButton)
     }
 
     private var subtitleText: String {
@@ -104,6 +107,15 @@ struct ScriptRowView: View {
         let formattedDate = dateFormatter.string(from: createdAt)
         let pageText = pageCount > 0 ? "\(pageCount) Halaman" : "Belum ada halaman"
         return "\(formattedDate)   \(pageText)"
+    }
+
+    private var accessibilityLabel: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "id_ID")
+        formatter.dateFormat = "dd MMMM yyyy"
+        let dateStr = formatter.string(from: createdAt)
+        let pageStr = pageCount > 0 ? "\(pageCount) Halaman" : "Belum ada halaman"
+        return "\(title), \(dateStr), \(pageStr)"
     }
 }
 
