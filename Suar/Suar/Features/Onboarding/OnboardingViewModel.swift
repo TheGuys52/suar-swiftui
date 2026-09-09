@@ -13,28 +13,28 @@ public struct OnboardingPage: Identifiable {
     public let id: Int
     public let title: String
     public let message: String
-    public let systemImageName: String
+    public let imageName: String
 }
 
 public extension OnboardingPage {
     static let defaults: [OnboardingPage] = [
         OnboardingPage(
             id: 0,
-            title: "Scripts Made Easier to Navigate",
-            message: "Suar organizes theater scripts into a clearer structure designed to work seamlessly with VoiceOver.",
-            systemImageName: "doc.text"
+            title: "Your Script\nReady For Rehearsal",
+            message: "Turn a PDF or photo into a script with clear dialogue, characters,and stage directions.",
+            imageName: "onBoarding1"
         ),
         OnboardingPage(
             id: 1,
-            title: "Find What You Need, Faster",
-            message: "Quickly navigate between scenes, characters, dialogue, and stage directions.",
-            systemImageName: "text.viewfinder"
+            title: "Find Your Place\nKeep Your Focus",
+            message: "Move between scenes, characters,and dialogue without searching through every page.",
+            imageName: "onBoarding2"
         ),
         OnboardingPage(
             id: 2,
-            title: "Start Reading",
-            message: "Add your own script and let Suar organize it into an accessible reading experience.",
-            systemImageName: "play.fill"
+            title: "Your Next Rehearsal\nStarts Here",
+            message: "Try a sample, or bring your own script. You can add more from your library.",
+            imageName: "onBoarding3"
         )
     ]
 }

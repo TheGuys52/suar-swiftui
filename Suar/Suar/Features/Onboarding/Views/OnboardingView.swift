@@ -9,18 +9,18 @@ import SwiftUI
 
 public struct OnboardingView: View {
     let viewModel: OnboardingViewModel
-
+    
     public init(viewModel: OnboardingViewModel) {
         self.viewModel = viewModel
     }
-
+    
     public var body: some View {
         VStack(spacing: 0) {
             ScrollView {
                 onboardingContent
             }
             .scrollIndicators(.hidden)
-
+            
             primaryButton
                 .padding(.top, 16)
         }
@@ -28,43 +28,47 @@ public struct OnboardingView: View {
         .padding(.bottom, 24)
         .background(Color.white.ignoresSafeArea())
     }
-
+    
     private var onboardingContent: some View {
         VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("Suar")
+                    .font(.custom("Georgia", size: 32))
+                    .foregroundStyle(Color.themeRed)
+                Spacer()
+            }
+            .padding(.top, 20)
+            .padding(.bottom, 30)
+            
+            Spacer()
+            
             illustrationCard
-                .padding(.top, 72)
-
+            
             Text(viewModel.currentPage.title)
-                .font(.title)
-                .fontWeight(.bold)
+                .font(.custom("Georgia", size: 28))
                 .foregroundStyle(.primary)
-                .padding(.top, 30)
-
+                .padding(.top, 60)
+            
             Text(viewModel.currentPage.message)
-                .font(.body)
+                .font(.custom("HelveticaNeue", size: 17))
                 .foregroundStyle(.secondary)
-                .padding(.top, 14)
-
+                .padding(.top, 30)
+            
             pageIndicator
-                .padding(.top, 16)
-                .padding(.bottom, 24)
+                .padding(.top, 50)
+                .padding(.bottom, 32)
         }
         .frame(maxWidth: .infinity)
+        .padding(.bottom, 12)
     }
-
+    
     private var illustrationCard: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color(uiColor: .systemGray5))
-
-            Image(systemName: viewModel.currentPage.systemImageName)
-                .font(.system(size: 72, weight: .medium))
-                .foregroundStyle(.tertiary)
-        }
-        .aspectRatio(0.82, contentMode: .fit)
-        .accessibilityHidden(true)
+        Image(viewModel.currentPage.imageName)
+            .resizable().scaledToFit()
+            .frame(maxWidth: .infinity)
+            .accessibilityHidden(true)
     }
-
+    
     private var pageIndicator: some View {
         HStack(spacing: 8) {
             ForEach(viewModel.pages.indices, id: \.self) { index in
@@ -77,7 +81,7 @@ public struct OnboardingView: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Page \(viewModel.currentPageIndex + 1) of \(viewModel.pages.count)")
     }
-
+    
     private var primaryButton: some View {
         Button {
             viewModel.didTapContinue()
@@ -87,7 +91,7 @@ public struct OnboardingView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, minHeight: 52)
-                .contentShape(Rectangle()) 
+                .contentShape(Rectangle())
                 .background(Color.themeRed)
                 .clipShape(Capsule())
         }

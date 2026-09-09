@@ -282,12 +282,16 @@ public final class ScriptPageViewModel {
     public func selectBlockWithAnnouncement(blockId: UUID) {
         UIAccessibility.post(
             notification: .announcement,
-            argument: "Block dipilih. Sedang merekam. Katakan perintah untuk mengubah teks."
+            argument: selectBlockAnnouncement
         )
         // State change setelah delay - recording mulai setelah announcement selesai
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
             self.isVoiceEditMode = true
             self.selectedVoiceEditBlockId = blockId
         }
+    }
+    
+    private var selectBlockAnnouncement: String {
+        "Block dipilih. Sedang merekam. Katakan perintah untuk mengubah teks."
     }
 }

@@ -19,17 +19,6 @@ struct VoiceEditBlockRowView: View {
     @State private var hasAutoStarted = false
     @State private var silenceTimer: Timer?
 
-    private var blockTypeAccessibilityLabel: String {
-        switch block.blockType {
-        case .sceneHeader: return "Adegan"
-        case .characterName: return "Tokoh"
-        case .dialogue: return "Dialog"
-        case .stageDirection: return "Arah panggung"
-        case .transition: return "Transisi"
-        default: return "Teks"
-        }
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Recording indicator
@@ -200,10 +189,14 @@ struct VoiceEditBlockRowView: View {
     private func announceResult(_ text: String) {
         UIAccessibility.post(
             notification: .announcement,
-            argument: "Berhasil. Perubahan yang dilakukan: \(text)"
+            argument: announceResultMessage(text)
         )
     }
     
+    private func announceResultMessage(_ text: String) -> String {
+        "Berhasil. Perubahan yang dilakukan: \(text)"
+    }
+
     // MARK: - Block Content
     @ViewBuilder
     private var blockContent: some View {
