@@ -41,35 +41,97 @@ public final class HomeViewModel {
         self.parserService = parserService ?? DIContainer.shared.scriptParserService
     }
 
-    #if DEBUG
-    public func seedSamplePDFIfNeeded() async {
-        guard let repository, let ocrService else { return }
+    private static let hasSeededKey = "hasSeededDummyScript_v1"
+
+    public func seedDummyScriptIfNeeded() async {
+        guard let repository else { return }
+        guard !UserDefaults.standard.bool(forKey: Self.hasSeededKey) else { return }
+        UserDefaults.standard.set(true, forKey: Self.hasSeededKey)
 
         do {
-            let existingScripts = try await repository.fetchAllScripts()
-            guard existingScripts.isEmpty else { return }
-
-            guard let pdfURL = Bundle.main.url(forResource: "ruangtunggu", withExtension: "pdf") else {
-                print("[Auto-Seed] File 'ruangtunggu.pdf' tidak ditemukan di Bundle.")
-                return
-            }
-
-            let rawPagesText = try await ocrService.extractText(from: pdfURL) { _ in }
-            let script = try await parserService.parseScript(
-                rawPagesText: rawPagesText,
-                scriptTitle: pdfURL.deletingPathExtension().lastPathComponent,
-                sourceFileName: pdfURL.lastPathComponent,
-                onProgress: nil
-            )
-            script.thumbnailData = generatePDFThumbnailData(from: pdfURL)
-
-            try await repository.save(script: script)
-            print("[Auto-Seed] Berhasil men-seed naskah: \(script.title)")
+            try await repository.save(script: makeDummyScript())
+            print("[Seed] Berhasil men-seed naskah dummy.")
         } catch {
-            print("[Auto-Seed] Gagal men-seed PDF: \(error.localizedDescription)")
+            print("[Seed] Gagal: \(error.localizedDescription)")
         }
     }
-    #endif
+
+    private func makeDummyScript() -> Script {
+        let scenes: [(scene: String, lines: [(type: ScriptBlockType, char: String?, cue: String?, content: String)])] = [
+            ("Bagian Pertama", [
+                (.stageDirection, nil, nil, "Ruang tunggu sebuah rumah sakit. Kursi-kursi plastik berjejer di lorong. Lampu neon berkedip pelan."),
+                (.dialogue, "WANITA", nil, "Kenapa kamu tidak pernah mau cerita sebenarnya?"),
+                (.dialogue, "PRIA", "(duduk tenang)", "Karena kadang diam lebih jujur daripada kata-kata."),
+                (.stageDirection, nil, nil, "Suara langkah kaki di lorong. Seorang perawat lewat dengan troli obat.")
+            ]),
+            ("Bagian Kedua", [
+                (.dialogue, "WANITA", "(membuka selembar surat)", "Ini... ini surat dari dia?"),
+                (.dialogue, "PRIA", "(mengangguk pelan)", "Dia menitipkan ini sebelum pergi."),
+                (.stageDirection, nil, nil, "Hujan mulai turun di luar jendela. Udara terasa lebih berat.")
+            ]),
+            ("Bagian Ketiga", [
+                (.dialogue, "DOKTER", "(masuk dengan langkah cepat)", "Maaf saya terlambat. Operasi berjalan lancar tapi... ada komplikasi."),
+                (.stageDirection, nil, nil, "Semua mata tertuju pada dokter. Kegelisahan merebak di ruangan."),
+                (.dialogue, "WANITA", "(berbisik)", "Komplikasi apa?")
+            ]),
+            ("Bagian Keempat", [
+                (.dialogue, "DOKTER", nil, "Jantungnya lemah. Kami sudah melakukan yang terbaik."),
+                (.stageDirection, nil, nil, "Keheningan yang panjang. Wanita meremas tangan pria."),
+                (.dialogue, "PRIA", "(memejamkan mata)", "Setidaknya... dia pergi dengan tenang.")
+            ]),
+            ("Bagian Kelima", [
+                (.stageDirection, nil, nil, "Malam tiba. Lampu ruang tunggu dipadamkan satu per satu."),
+                (.dialogue, "WANITA", "(berdiri, menatap jendela)", "Aku tidak bisa melupakan hari ini."),
+                (.dialogue, "PRIA", "(menggenggam tangannya)", "Dan aku tidak akan membiarkanmu sendiri."),
+                (.stageDirection, nil, nil, "Mereka berjalan bersama menyusuri lorong gelap, meninggalkan ruang tunggu untuk selamanya.")
+            ])
+        ]
+
+        var allPages: [ScriptPage] = []
+        var orderIndex = 1
+
+        for (pageNum, scene) in scenes.enumerated() {
+            var blocks: [ScriptBlock] = []
+
+            let header = ScriptBlock(
+                orderIndex: orderIndex,
+                blockType: .sceneHeader,
+                content: scene.scene,
+                startPageNumber: pageNum + 1
+            )
+            blocks.append(header)
+            orderIndex += 1
+
+            for line in scene.lines {
+                let block = ScriptBlock(
+                    orderIndex: orderIndex,
+                    blockType: line.type,
+                    characterName: line.char,
+                    content: line.content,
+                    cueDescription: line.cue,
+                    startPageNumber: pageNum + 1
+                )
+                blocks.append(block)
+                orderIndex += 1
+            }
+
+            let page = ScriptPage(
+                pageNumber: pageNum + 1,
+                rawExtractedText: "",
+                blocks: blocks
+            )
+            allPages.append(page)
+        }
+
+        return Script(
+            title: "Ruang Tunggu",
+            createdAt: Date(),
+            lastReadPage: 1,
+            pageCount: allPages.count,
+            sourceFileName: "ruang-tunggu-dummy",
+            pages: allPages
+        )
+    }
 
     public func fetchRecentScripts() async {
         guard let repository else { return }
