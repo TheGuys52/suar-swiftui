@@ -29,7 +29,7 @@ struct AllScriptList: View {
                                 Text(section.label)
                                     .font(.caption)
                                     .fontWeight(.semibold)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.themeTypo)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.top, 8)
                             }
@@ -97,6 +97,27 @@ struct ScriptRowView: View {
     }
 }
 
-#Preview {
+#Preview("Empty") {
     AllScriptList(groupedScripts: [])
+}
+
+#Preview("With Data") {
+    let sampleData: [GroupedScript] = [
+        GroupedScript(
+            id: "1",
+            label: "SEPTEMBER",
+            scripts: [
+                Script(title: "Ruang Tunggu - Bagian 1", pageCount: 24),
+                Script(title: "Ruang Tunggu - Bagian 2", pageCount: 18)
+            ]
+        ),
+        GroupedScript(
+            id: "2",
+            label: "",
+            scripts: [
+                Script(title: "Naskah Lama", pageCount: 5)
+            ]
+        )
+    ]
+    return AllScriptList(groupedScripts: sampleData)
 }

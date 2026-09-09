@@ -91,10 +91,18 @@ struct SuarProgressViewStyle: ProgressViewStyle {
     }
 }
 
-#Preview {
+#Preview("Processing") {
     ProcessingProgressView(
-        scriptTitle: "Ruang Tunggu - Bagian 1",
+        scriptTitle: "Ruang Tunggu",
         progress: 0.45,
         statusMessage: "Mengekstrak teks dari halaman 5..."
+    )
+}
+
+#Preview("Complete") {
+    ProcessingProgressView(
+        scriptTitle: "Ruang Tunggu",
+        progress: 1.0,
+        statusMessage: "Selesai!"
     )
 }

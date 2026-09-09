@@ -118,6 +118,13 @@ struct AllScriptsSection: View {
     }
 }
 
-#Preview {
+#Preview("Empty") {
     AllScriptsSection(scripts: [])
+}
+
+#Preview("With Data") {
+    AllScriptsSection(scripts: [
+        Script(title: "Ruang Tunggu - Bagian 1", createdAt: Date(), pageCount: 24),
+        Script(title: "Ruang Tunggu - Bagian 2", createdAt: Date().addingTimeInterval(-86400), pageCount: 18)
+    ])
 }

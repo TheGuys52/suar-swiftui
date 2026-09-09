@@ -214,9 +214,23 @@ private var addLabel: String {
     "Tambah Naskah"
 }
 
-#Preview {
+#Preview("Empty") {
+    HomeView(viewModel: HomeViewModel(), isShowingFileImporter: .constant(false))
+}
+
+#Preview("With Data") {
     HomeView(
-        viewModel: HomeViewModel(),
+        viewModel: {
+            let vm = HomeViewModel()
+            vm.recentScripts = [
+                Script(title: "Ruang Tunggu", createdAt: Date(), lastReadPage: 12, pageCount: 24)
+            ]
+            vm.allScripts = [
+                Script(title: "Ruang Tunggu - Bagian 1", createdAt: Date(), pageCount: 24),
+                Script(title: "Ruang Tunggu - Bagian 2", createdAt: Date().addingTimeInterval(-86400), pageCount: 18)
+            ]
+            return vm
+        }(),
         isShowingFileImporter: .constant(false)
     )
 }

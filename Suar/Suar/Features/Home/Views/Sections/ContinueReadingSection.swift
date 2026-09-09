@@ -61,6 +61,12 @@ private struct ContinueReadingPlaceholderCard: View {
     }
 }
 
-#Preview {
+#Preview("Empty") {
     ContinueReadingSection(scripts: [])
+}
+
+#Preview("With Data") {
+    ContinueReadingSection(scripts: [
+        Script(title: "Ruang Tunggu", createdAt: Date(), lastReadPage: 12, pageCount: 24)
+    ])
 }

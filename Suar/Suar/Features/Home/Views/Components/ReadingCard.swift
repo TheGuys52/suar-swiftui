@@ -86,7 +86,12 @@ struct ReadingCard: View {
     }
 }
 
-#Preview {
-    ReadingCard(script: Script(title: "Ruang Tunggu"))
+#Preview("With Progress") {
+    ReadingCard(script: Script(title: "Ruang Tunggu", lastReadPage: 12, pageCount: 24))
+        .padding()
+}
+
+#Preview("No Progress") {
+    ReadingCard(script: Script(title: "Naskah Baru"))
         .padding()
 }
