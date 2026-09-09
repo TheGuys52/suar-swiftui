@@ -83,10 +83,13 @@ struct ScriptLineRowView: View {
 
     private var dialogueAccessibilityLabel: String {
         var label = ""
-        if let cue = block.cueDescription {
-            label = "\(cue). "
+        if let characterName = block.characterName {
+            label = characterName
         }
-        label += block.content
+        if let cue = block.cueDescription {
+            label += ". \(cue)"
+        }
+        label += ". \(block.content)"
         return label
     }
 
