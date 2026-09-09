@@ -231,8 +231,8 @@ private var addLabel: String {
         Script(title: "Ruang Tunggu", createdAt: Date(), lastReadPage: 12, pageCount: 24)
     ]
     vm.allScripts = [
-        Script(title: "Ruang Tunggu - Bagian 1", createdAt: Date(), pageCount: 24),
-        Script(title: "Ruang Tunggu - Bagian 2", createdAt: Date().addingTimeInterval(-86400), pageCount: 18)
+        Script(title: "Ruang Tunggu - Bagian 1", createdAt: Date(), lastReadPage: 1, pageCount: 24),
+        Script(title: "Ruang Tunggu - Bagian 2", createdAt: Date().addingTimeInterval(-86400), lastReadPage: 1, pageCount: 18)
     ]
     return HomeView(viewModel: vm, isShowingFileImporter: .constant(false))
 }

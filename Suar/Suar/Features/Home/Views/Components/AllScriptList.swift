@@ -37,10 +37,10 @@ struct AllScriptList: View {
                             ForEach(section.scripts, id: \.id) { script in
                                 ScriptRowView(
                                     title: script.title,
-                                    subtitle: script.pageCount > 0
-                                        ? "\(script.pageCount) Halaman"
-                                        : "Belum ada halaman"
+                                    createdAt: script.createdAt,
+                                    pageCount: script.pageCount
                                 )
+                                .padding(.leading, 8)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
                                     onSelectScript?(script)
@@ -80,7 +80,8 @@ private struct EmptyScriptListPlaceholder: View {
 
 struct ScriptRowView: View {
     let title: String
-    let subtitle: String
+    let createdAt: Date
+    let pageCount: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -88,12 +89,21 @@ struct ScriptRowView: View {
                 .font(.body)
                 .foregroundStyle(.primary)
 
-            Text(subtitle)
+            Text(subtitleText)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
             Divider()
         }
+    }
+
+    private var subtitleText: String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "id_ID")
+        dateFormatter.dateFormat = "dd MMMM"
+        let formattedDate = dateFormatter.string(from: createdAt)
+        let pageText = pageCount > 0 ? "\(pageCount) Halaman" : "Belum ada halaman"
+        return "\(formattedDate)   \(pageText)"
     }
 }
 
@@ -102,22 +112,24 @@ struct ScriptRowView: View {
 }
 
 #Preview("With Data") {
+    let sep2026 = Date()
+    let aug2026 = Calendar.current.date(byAdding: .day, value: -30, to: sep2026)!
     let sampleData: [GroupedScript] = [
         GroupedScript(
             id: "1",
-            label: "SEPTEMBER",
+            label: "SEPTEMBER 2026",
             scripts: [
-                Script(title: "Ruang Tunggu - Bagian 1", pageCount: 24),
-                Script(title: "Ruang Tunggu - Bagian 2", pageCount: 18)
+                Script(title: "Ruang Tunggu - Bagian 1", createdAt: sep2026, lastReadPage: 1, pageCount: 24),
+                Script(title: "Ruang Tunggu - Bagian 2", createdAt: sep2026, lastReadPage: 1, pageCount: 18)
             ]
         ),
         GroupedScript(
             id: "2",
             label: "",
             scripts: [
-                Script(title: "Naskah Lama", pageCount: 5)
+                Script(title: "Naskah Lama", createdAt: aug2026, lastReadPage: 1, pageCount: 5)
             ]
         )
     ]
-    return AllScriptList(groupedScripts: sampleData)
+    AllScriptList(groupedScripts: sampleData)
 }
