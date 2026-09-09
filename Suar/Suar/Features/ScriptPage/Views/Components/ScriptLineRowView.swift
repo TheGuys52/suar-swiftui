@@ -35,7 +35,7 @@ struct ScriptLineRowView: View {
     }
 
     private var sceneHeaderAccessibilityLabel: String {
-        "Adegan. \(block.content)"
+        "\(block.content)"
     }
 
     // MARK: - Character
@@ -52,7 +52,7 @@ struct ScriptLineRowView: View {
     }
 
     private var characterAccessibilityLabel: String {
-        "Tokoh. \(block.content)"
+        "\(block.content)"
     }
 
     // MARK: - Dialogue
@@ -82,9 +82,9 @@ struct ScriptLineRowView: View {
     }
 
     private var dialogueAccessibilityLabel: String {
-        var label = "Dialog."
+        var label = ""
         if let cue = block.cueDescription {
-            label = "Dialog. \(cue). "
+            label = "\(cue). "
         }
         label += block.content
         return label
@@ -103,7 +103,7 @@ struct ScriptLineRowView: View {
     }
 
     private var parentheticalAccessibilityLabel: String {
-        "Keterangan. \(block.content)"
+        "\(block.content)"
     }
 
     // MARK: - Stage Direction
@@ -118,7 +118,7 @@ struct ScriptLineRowView: View {
     }
 
     private var stageDirectionAccessibilityLabel: String {
-        "Arah panggung. \(block.content)"
+        "\(block.content)"
     }
 
     // MARK: - Transition
@@ -133,7 +133,7 @@ struct ScriptLineRowView: View {
     }
 
     private var transitionAccessibilityLabel: String {
-        "Transisi. \(block.content)"
+        "\(block.content)"
     }
 
     // MARK: - Search Highlight
