@@ -5,11 +5,11 @@ public struct ScriptPageView: View {
     @Bindable var viewModel: ScriptPageViewModel
     @FocusState private var searchFieldFocused: Bool
     @State private var showDeleteConfirmation = false
-
+    
     public init(viewModel: ScriptPageViewModel) {
         self.viewModel = viewModel
     }
-
+    
     public var body: some View {
         ZStack {
             Color.white.ignoresSafeArea()
@@ -24,9 +24,14 @@ public struct ScriptPageView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .toolbar {
             ToolbarItem(placement: .principal) {
-                Text("\(viewModel.currentPageNumber) / \(viewModel.totalPages)")
-                    .font(.headline.monospacedDigit())
-                    .foregroundStyle(.primary)
+                Group {
+                    Text("\(viewModel.currentPageNumber)/\(viewModel.totalPages)")
+                        .font(.headline.monospacedDigit())
+                        .foregroundStyle(.primary)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(pageNumberAccessibilityLabel)
+                .accessibilityAddTraits(.updatesFrequently)
             }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 12) {
@@ -41,7 +46,7 @@ public struct ScriptPageView: View {
                     } label: {
                         Image(systemName: "magnifyingglass")
                     }
-
+                    
                     if viewModel.isVoiceEditMode {
                         // Stop button — hanya saat voice edit mode
                         Button {
@@ -49,24 +54,30 @@ public struct ScriptPageView: View {
                                 await viewModel.saveAllVoiceEditedBlocks()
                             }
                             viewModel.toggleVoiceEditMode()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                    UIAccessibility.post(
+                                        notification: .announcement,
+                                        argument: "Berhasil keluar dari mode edit suara."
+                                    )
+                                }
                         } label: {
                             Image(systemName: "stop.circle.fill")
                                 .font(.system(size: 24))
                                 .foregroundStyle(.red)
                         }
-                        .accessibilityLabel("Simpan dan keluar dari mode edit suara")
+                        .accessibilityLabel(stopVoiceEditButtonLabel)
                     } else {
                         // Menu
                         Menu {
                             Button {
                                 viewModel.openAudioNotes()
                             } label: {
-                                Label("Catatan Suara", systemImage: "waveform")
+                                Label(catatanSuaraLabel, systemImage: "waveform")
                             }
                             .disabled(!viewModel.canAddAudioNotes)
-
+                            
                             Divider()
-
+                            
                             Button {
                                 if viewModel.isEditMode {
                                     Task { await viewModel.saveAllEditedBlocks() }
@@ -74,26 +85,26 @@ public struct ScriptPageView: View {
                                 viewModel.toggleEditMode()
                             } label: {
                                 Label(
-                                    viewModel.isEditMode ? "Selesai" : "Edit",
+                                    editMenuButtonLabel,
                                     systemImage: viewModel.isEditMode ? "checkmark" : "pencil"
                                 )
                             }
-
+                            
                             if !viewModel.isEditMode {
                                 Divider()
                                 Button {
                                     viewModel.toggleVoiceEditMode()
                                 } label: {
-                                    Label("Edit Suara", systemImage: "mic.fill")
+                                    Label(editSuaraLabel, systemImage: "mic.fill")
                                 }
                             }
-
+                            
                             Divider()
-
+                            
                             Button(role: .destructive) {
                                 showDeleteConfirmation = true
                             } label: {
-                                Label("Hapus", systemImage: "trash")
+                                Label(hapusLabel, systemImage: "trash")
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle")
@@ -108,16 +119,16 @@ public struct ScriptPageView: View {
         .sheet(item: $viewModel.audioNotesViewModel, onDismiss: viewModel.refreshAudioNoteCount) { audioNotes in
             AudioNotesView(viewModel: audioNotes)
         }
-        .accessibilityRotor(ScriptRotorType.scenes.rawValue, entries: {
-            ForEach(sceneBlocks) { block in
-                AccessibilityRotorEntry(block.content, id: block.id)
-            }
-        })
-        .accessibilityRotor(ScriptRotorType.characters.rawValue, entries: {
-            ForEach(uniqueCharacterBlocks) { block in
-                AccessibilityRotorEntry(block.characterName ?? "", id: block.id)
-            }
-        })
+//        .accessibilityRotor(ScriptRotorType.scenes.rawValue, entries: {
+//            ForEach(sceneBlocks) { block in
+//                AccessibilityRotorEntry(block.content, id: block.id)
+//            }
+//        })
+//        .accessibilityRotor(ScriptRotorType.characters.rawValue, entries: {
+//            ForEach(uniqueCharacterBlocks) { block in
+//                AccessibilityRotorEntry(block.characterName ?? "", id: block.id)
+//            }
+//        })
         .overlay(alignment: .bottom) {
             ScriptPageNavigationView(viewModel: viewModel)
                 .padding(.bottom, 16)
@@ -141,14 +152,26 @@ public struct ScriptPageView: View {
             Text(viewModel.errorMessage ?? "")
         }
     }
-
+    
+    private var pageNumberAccessibilityLabel: String {
+        "Halaman \(viewModel.currentPageNumber) dari \(viewModel.totalPages)"
+    }
+    
+    private var catatanSuaraLabel: String { "Catatan Suara" }
+    private var editMenuButtonLabel: String {
+        viewModel.isEditMode ? "Selesai" : "Edit"
+    }
+    private var selesaiLabel: String { "Selesai" }
+    private var editSuaraLabel: String { "Edit Suara" }
+    private var hapusLabel: String { "Hapus" }
+    
     // MARK: - Find Navigator
     private var findNavigator: some View {
         HStack(spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-
+                
                 TextField("Cari...", text: $viewModel.searchText)
                     .textFieldStyle(.plain)
                     .focused($searchFieldFocused)
@@ -167,20 +190,20 @@ public struct ScriptPageView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
-
+            
             if !viewModel.searchResults.isEmpty {
                 Text("\(viewModel.currentSearchIndex + 1) dari \(viewModel.searchResults.count)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .monospacedDigit()
-
+                
                 Button {
                     viewModel.previousSearchResult()
                 } label: {
                     Image(systemName: "chevron.up")
                 }
                 .disabled(viewModel.searchResults.isEmpty)
-
+                
                 Button {
                     viewModel.nextSearchResult()
                 } label: {
@@ -188,7 +211,7 @@ public struct ScriptPageView: View {
                 }
                 .disabled(viewModel.searchResults.isEmpty)
             }
-
+            
             Button("Selesai") {
                 withAnimation(.easeInOut(duration: 0.25)) {
                     viewModel.dismissSearch()
@@ -201,7 +224,7 @@ public struct ScriptPageView: View {
         .background(Color(.systemBackground))
         .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
     }
-
+    
     // MARK: - Content Area
     @ViewBuilder
     private var contentArea: some View {
@@ -210,32 +233,35 @@ public struct ScriptPageView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             if viewModel.isEditMode {
-                Text("Mode Edit — ketuk teks untuk mengubah")
+                Text("Edit Ketik — ketuk teks untuk mengubah")
                     .font(.caption)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
                     .background(Color.themeRed)
+                    .accessibilityLabel(editModeLabel)
             } else if viewModel.isVoiceEditMode {
-                Text("Mode Edit Suara — ketuk bagian kata untuk diubah")
+                Text("Edit Suara — ketuk bagian kata untuk diubah")
                     .font(.caption)
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
                     .background(Color.blue)
+                    .accessibilityLabel(voiceEditModeLabel)
+                    .accessibilityHint(voiceEditModeHint)
             }
             scrollContent
         }
     }
-
+    
     private var scrollContent: some View {
         ScrollViewReaderContent(viewModel: viewModel, searchText: viewModel.searchText)
     }
-
+    
     private var sceneBlocks: [ScriptBlock] {
         viewModel.blocks.filter { $0.blockType == .sceneHeader }
     }
-
+    
     private var uniqueCharacterBlocks: [ScriptBlock] {
         var seen = Set<String>()
         return viewModel.blocks.filter { block in
@@ -245,13 +271,30 @@ public struct ScriptPageView: View {
             return true
         }
     }
+    
+    // MARK: - Accesibility Label
+    private var editModeLabel: String {
+        "Edit Ketik — ketuk teks untuk mengubah"
+    }
+    
+    private var voiceEditModeLabel: String {
+        "Edit Suara — ketuk bagian kata untuk diubah"
+    }
+    
+    private var stopVoiceEditButtonLabel: String {
+        "Simpan dan keluar dari Edit dengan Suara"
+    }
+    
+    private var voiceEditModeHint: String {
+        "Cara nya adalah pilih bagian teks, ketuk dua kali, lalu tekan dan tahan 1 detik untuk mengubah kata atau bagian tersebut dengan suara."
+    }
 }
 
 // MARK: - ScrollViewReader Content
 private struct ScrollViewReaderContent: View {
     @Bindable var viewModel: ScriptPageViewModel
     let searchText: String
-
+    
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -267,10 +310,12 @@ private struct ScrollViewReaderContent: View {
                                 block: block,
                                 isSelected: viewModel.selectedVoiceEditBlockId == block.id,
                                 onTap: {
-                                    viewModel.selectVoiceEditBlock(block)
+                                    viewModel.selectBlockWithAnnouncement(blockId: block.id)
                                 },
                                 onVoiceEdit: { blockId, newContent in
                                     viewModel.applyVoiceEditToBlock(id: blockId, content: newContent)
+                                    // Reset agar bisa edit block lagi
+                                        viewModel.selectedVoiceEditBlockId = nil
                                 }
                             )
                             .id(block.id)
@@ -302,12 +347,12 @@ private struct ScrollViewReaderContent: View {
             }
         }
     }
-
+    
     private func blockMatchesSearch(_ block: ScriptBlock) -> Bool {
         guard !searchText.isEmpty else { return false }
         return viewModel.searchResults.contains { $0.blockId == block.id }
     }
-
+    
     private func scrollToCurrentSearchResult(proxy: ScrollViewProxy) {
         guard viewModel.currentSearchIndex < viewModel.searchResults.count else { return }
         let blockId = viewModel.searchResults[viewModel.currentSearchIndex].blockId

@@ -39,28 +39,27 @@ public final class SpeechRecognitionService: ObservableObject {
     // MARK: - Recording
     
     public func startRecording() throws {
+        let audioSession = AVAudioSession.sharedInstance()
+        try audioSession.setCategory(.playAndRecord, mode: .spokenAudio, options: .defaultToSpeaker)
+        try audioSession.setActive(true)
+        
         recognitionTask?.cancel()
         recognitionTask = nil
-        
-        // Setup Audio Session
-        let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-        try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        
+
         // Recognition Request
         recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
         guard let recognitionRequest = recognitionRequest else {
             throw SpeechError.requestCreationFailed
         }
-        
+
         // Setup Audio Engine
         let inputNode = audioEngine.inputNode
         let recordingFormat = inputNode.outputFormat(forBus: 0)
-        
+
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
             self.recognitionRequest?.append(buffer)
         }
-        
+
         audioEngine.prepare()
         try audioEngine.start()
         
@@ -93,6 +92,8 @@ public final class SpeechRecognitionService: ObservableObject {
         recognitionTask?.cancel()
         recognitionTask = nil
         isRecording = false
+        
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
     
     // MARK: - Error

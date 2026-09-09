@@ -40,7 +40,8 @@ struct AllScriptsSection: View {
 //                    .bold()
                     .font(.custom("Georgia", size: 22, relativeTo: .title2))
                     .frame(maxWidth: .infinity, alignment: .leading)
-
+                    .accessibilityLabel(allScriptLabel)
+                    
                 Menu {
                     Picker("Sort By", selection: $sortOption) {
                         ForEach(SortOption.allCases, id: \.self) { option in
@@ -68,6 +69,10 @@ struct AllScriptsSection: View {
             )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    private var allScriptLabel: String {
+        "Semua Naskah"
     }
 
     private var groupedScripts: [GroupedScript] {

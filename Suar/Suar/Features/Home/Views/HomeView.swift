@@ -24,12 +24,12 @@ struct HomeView: View {
             ]
         }
         
-//        if let georgiaSmall = UIFont(name: "Georgia", size: 17) {
-//            UINavigationBar.appearance().titleTextAttributes = [
-//                .font: georgiaSmall,
-//                .foregroundColor: UIColor(Color.themeTypo)
-//            ]
-//        }
+        //        if let georgiaSmall = UIFont(name: "Georgia", size: 17) {
+        //            UINavigationBar.appearance().titleTextAttributes = [
+        //                .font: georgiaSmall,
+        //                .foregroundColor: UIColor(Color.themeTypo)
+        //            ]
+        //        }
     }
     
     private var filteredScripts: [Script] {
@@ -84,24 +84,24 @@ struct HomeView: View {
         .navigationTitle("Suar")
         .toolbarTitleDisplayMode(.inlineLarge)
         .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            if isSearchFocused {
-                                isSearchFocused = false
-                                hideKeyboard()
-                            } else {
-                                viewModel.didTapShowOnboarding()
-                            }
-                        } label: {
-                            Image(systemName: "questionmark")
-                        }
-
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    if isSearchFocused {
+                        isSearchFocused = false
+                        hideKeyboard()
+                    } else {
+                        viewModel.didTapShowOnboarding()
                     }
+                } label: {
+                    Image(systemName: "questionmark")
                 }
+                .accessibilityLabel(helpButtonAccessibilityLabel)
+            }
+        }
         .task {
-            #if DEBUG
+#if DEBUG
             await viewModel.seedSamplePDFIfNeeded()
-            #endif
+#endif
             await viewModel.fetchRecentScripts()
             await viewModel.fetchAllScripts()
         }
@@ -146,6 +146,10 @@ struct HomeView: View {
     
     // MARK: - Helpers & Subviews
     
+    private var helpButtonAccessibilityLabel: String {
+        "Panduan Aplikasi"
+    }
+    
     private func handleScriptSelection(_ script: Script) {
         if isSearchFocused {
             isSearchFocused = false
@@ -184,6 +188,12 @@ struct HomeView: View {
             
             Button {
                 viewModel.didTapImport()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        UIAccessibility.post(
+                            notification: .announcement,
+                            argument: "Silahkan pilih file naskah yang mau ditambahkan."
+                        )
+                    }
             } label: {
                 Image(systemName: "plus")
                     .font(.title2)
@@ -193,10 +203,15 @@ struct HomeView: View {
                     .background(Color.themeRed)
                     .clipShape(Circle())
             }
+            .accessibilityLabel(addLabel)
         }
         .padding(.horizontal)
         .padding(.bottom, 8)
     }
+}
+
+private var addLabel: String {
+    "Tambah Naskah"
 }
 
 #Preview {

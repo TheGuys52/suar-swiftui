@@ -17,6 +17,7 @@ struct ContinueReadingSection: View {
 //                .bold()
                 .font(.custom("Georgia", size: 22, relativeTo: .title2))
                 .padding(.horizontal)
+                .accessibilityLabel(continueReadingLabel)
             
             if let lastOpenedScript = scripts.first {
                 ReadingCard(script: lastOpenedScript)
@@ -31,6 +32,10 @@ struct ContinueReadingSection: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+private var continueReadingLabel: String {
+    "Lanjut Membaca"
 }
 
 private struct ContinueReadingPlaceholderCard: View {
