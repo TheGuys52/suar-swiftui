@@ -25,7 +25,9 @@ public final class HomeCoordinator: CoordinatorProtocol {
                 isShowingFileImporter: $coordinator.isPresentingImportPicker
             )
             .fullScreenCover(isPresented: $coordinator.isPresentingOnboarding) {
-                OnboardingCoverView(coordinator: self)
+                OnboardingCoverView { [weak self] in
+                    self?.isPresentingOnboarding = false
+                }
             }
         }
     }
@@ -52,22 +54,7 @@ public final class HomeCoordinator: CoordinatorProtocol {
         }
     }
 
-    /// Navigasi ke halaman reader untuk script tertentu berdasarkan ID.
     public func openScriptReader(script: Script) {
         router.push(.reader(scriptId: script.id))
-    }
-
-    private struct OnboardingCoverView: View {
-        @Bindable var coordinator: HomeCoordinator
-        @State private var onboardingViewModel = OnboardingViewModel()
-
-        var body: some View {
-            OnboardingView(viewModel: onboardingViewModel)
-                .onAppear {
-                    onboardingViewModel.onFinish = {
-                        coordinator.isPresentingOnboarding = false
-                    }
-                }
-        }
     }
 }

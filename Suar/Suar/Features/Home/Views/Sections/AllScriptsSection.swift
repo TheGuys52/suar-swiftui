@@ -18,7 +18,7 @@ struct AllScriptsSection: View {
                 Text("Semua Naskah")
                     .font(.custom("Georgia", size: 22, relativeTo: .title2))
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityLabel(allScriptLabel)
+                    .accessibilityLabel("Semua Naskah")
 
                 Menu {
                     Picker("Sort By", selection: $sortOption) {
@@ -47,10 +47,6 @@ struct AllScriptsSection: View {
             )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var allScriptLabel: String {
-        "Semua Naskah"
     }
 }
 

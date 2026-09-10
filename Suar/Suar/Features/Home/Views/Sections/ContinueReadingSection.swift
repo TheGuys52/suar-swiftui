@@ -14,10 +14,9 @@ struct ContinueReadingSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Terakhir Dibuka")
-//                .bold()
                 .font(.custom("Georgia", size: 22, relativeTo: .title2))
                 .padding(.horizontal)
-                .accessibilityLabel(continueReadingLabel)
+                .accessibilityLabel("Terakhir dibuka")
             
             if let lastOpenedScript = scripts.first {
                 ReadingCard(script: lastOpenedScript)
@@ -32,10 +31,6 @@ struct ContinueReadingSection: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-}
-
-private var continueReadingLabel: String {
-    "Terakhir dibuka"
 }
 
 private struct ContinueReadingPlaceholderCard: View {
