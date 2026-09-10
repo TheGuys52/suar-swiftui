@@ -2,16 +2,10 @@
 //  AllScriptList.swift
 //  Suar
 //
-//  Created by Ivan Putra Pratama on 26/08/26.
+//  Created by DIMAS DAFFA ERNANDA on 10/09/26.
 //
 
 import SwiftUI
-
-struct GroupedScript: Identifiable {
-    let id: String
-    let label: String
-    let scripts: [Script]
-}
 
 struct AllScriptList: View {
     let groupedScripts: [GroupedScript]

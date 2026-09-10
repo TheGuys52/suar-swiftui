@@ -2,28 +2,10 @@
 //  ProcessingProgressView.swift
 //  Suar
 //
-//  Created by DIMAS DAFFA ERNANDA on 30/08/26.
+//  Created by DIMAS DAFFA ERNANDA on 10/09/26.
 //
 
 import SwiftUI
-
-public enum ProcessingPhase: Equatable {
-    case idle
-    case ocr
-    case parsing(current: Int, total: Int)
-    case saving
-    case success(scriptId: UUID, scriptTitle: String)
-    case error(message: String)
-
-    var isActive: Bool {
-        switch self {
-        case .idle, .success, .error:
-            return false
-        default:
-            return true
-        }
-    }
-}
 
 public struct ProcessingInlineCard: View {
     let scriptTitle: String
@@ -86,7 +68,7 @@ public struct ProcessingInlineCard: View {
         case .ocr, .parsing, .saving:
             return .secondary
         case .success:
-            return Color(hex: "22C55E") // green
+            return Color(hex: "22C55E")
         case .error:
             return Color.themeRed
         }
@@ -190,34 +172,6 @@ public struct ProcessingInlineCard: View {
         case .error(let message):
             return "Gagal memproses naskah \(scriptTitle). \(message)"
         }
-    }
-}
-
-// MARK: - Color extension for hex
-
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3:
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6:
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8:
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
     }
 }
 

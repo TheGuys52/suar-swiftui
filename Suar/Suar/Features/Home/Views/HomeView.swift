@@ -1,37 +1,32 @@
-import Observation
-import SwiftUI
-import UniformTypeIdentifiers
+//
+//  HomeView.swift
+//  Suar
+//
+//  Created by DIMAS DAFFA ERNANDA on 10/09/26.
+//
 
-extension UTType {
-    static let docx = UTType(importedAs: "org.openxmlformats.wordprocessingml.document")
-    static let doc = UTType(importedAs: "com.microsoft.word.doc")
-}
+import SwiftUI
+import UIKit
+import UniformTypeIdentifiers
 
 struct HomeView: View {
     @Bindable var viewModel: HomeViewModel
     @Binding var isShowingFileImporter: Bool
     @State private var searchText = ""
     @FocusState private var isSearchFocused: Bool
-    
+
     init(viewModel: HomeViewModel, isShowingFileImporter: Binding<Bool>) {
         self.viewModel = viewModel
         self._isShowingFileImporter = isShowingFileImporter
-        
+
         if let georgia = UIFont(name: "Georgia", size: 34) {
             UINavigationBar.appearance().largeTitleTextAttributes = [
                 .font: georgia,
                 .foregroundColor: UIColor(Color.themeTypo)
             ]
         }
-        
-        //        if let georgiaSmall = UIFont(name: "Georgia", size: 17) {
-        //            UINavigationBar.appearance().titleTextAttributes = [
-        //                .font: georgiaSmall,
-        //                .foregroundColor: UIColor(Color.themeTypo)
-        //            ]
-        //        }
     }
-    
+
     private var filteredScripts: [Script] {
         let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
         if query.isEmpty {
@@ -42,12 +37,11 @@ struct HomeView: View {
             }
         }
     }
-    
+
     var body: some View {
         ZStack {
             ScrollView {
                 VStack(spacing: 28) {
-                    // MARK: - Sections
                     ContinueReadingSection(
                         scripts: viewModel.recentScripts,
                         onSelectScript: { script in
@@ -78,8 +72,7 @@ struct HomeView: View {
             .safeAreaInset(edge: .bottom) {
                 bottomSearchBar
             }
-            
-            // Full-screen overlay to dismiss keyboard on background tap
+
             if isSearchFocused {
                 Color.black.opacity(0.001)
                     .ignoresSafeArea()
@@ -105,11 +98,11 @@ struct HomeView: View {
                 } label: {
                     Image(systemName: "questionmark")
                 }
-                .accessibilityLabel(helpButtonAccessibilityLabel)
+                .accessibilityLabel("Panduan Aplikasi")
             }
         }
         .task {
-            await viewModel.seedDummyScriptIfNeeded()
+            await viewModel.seedIfNeeded()
             await viewModel.fetchRecentScripts()
             await viewModel.fetchAllScripts()
         }
@@ -142,12 +135,6 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Helpers & Subviews
-    
-    private var helpButtonAccessibilityLabel: String {
-        "Panduan Aplikasi"
-    }
-    
     private func handleScriptSelection(_ script: Script) {
         if isSearchFocused {
             isSearchFocused = false
@@ -156,17 +143,17 @@ struct HomeView: View {
             viewModel.didTapScript(id: script.id)
         }
     }
-    
+
     private var bottomSearchBar: some View {
         HStack(spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.gray)
-                
+
                 TextField("Cari Naskah", text: $searchText)
                     .focused($isSearchFocused)
                     .autocorrectionDisabled()
-                
+
                 if !searchText.isEmpty {
                     Button {
                         searchText = ""
@@ -183,15 +170,15 @@ struct HomeView: View {
             .padding(.vertical, 14)
             .background(.ultraThinMaterial)
             .clipShape(Capsule())
-            
+
             Button {
                 viewModel.didTapImport()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        UIAccessibility.post(
-                            notification: .announcement,
-                            argument: "Silahkan pilih file naskah yang mau ditambahkan."
-                        )
-                    }
+                    UIAccessibility.post(
+                        notification: .announcement,
+                        argument: "Silahkan pilih file naskah yang mau ditambahkan."
+                    )
+                }
             } label: {
                 Image(systemName: "plus")
                     .font(.title2)
@@ -201,15 +188,11 @@ struct HomeView: View {
                     .background(Color.themeRed)
                     .clipShape(Circle())
             }
-            .accessibilityLabel(addLabel)
+            .accessibilityLabel("Tambah Naskah")
         }
         .padding(.horizontal)
         .padding(.bottom, 8)
     }
-}
-
-private var addLabel: String {
-    "Tambah Naskah"
 }
 
 #Preview("Empty") {

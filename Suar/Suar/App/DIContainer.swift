@@ -14,9 +14,28 @@ public final class DIContainer: @unchecked Sendable {
     var audioNoteRepository: AudioNoteRepository?
     public lazy var ocrService: VisionOCRServiceProtocol = VisionOCRService()
     public lazy var parserService: ScriptParserServiceProtocol = ScriptParserService()
-    lazy var scriptParserService: ScriptParserServiceProtocol = {
+    public lazy var scriptParserService: ScriptParserServiceProtocol = {
         let apiKey = Bundle.main.object(forInfoDictionaryKey: "LLM_OLAGON_API_KEY") as? String ?? ""
         return AIScriptParserService(apiKey: apiKey)
+    }()
+
+    public lazy var thumbnailService: ThumbnailServiceProtocol = ThumbnailService()
+    public lazy var seederService: ScriptSeederServiceProtocol = {
+        guard let repo = scriptRepository else {
+            fatalError("DIContainer.scriptRepository must be set before accessing seederService")
+        }
+        return ScriptSeederService(repository: repo)
+    }()
+    public lazy var importPipelineService: ScriptImportPipelineServiceProtocol = {
+        guard let repo = scriptRepository else {
+            fatalError("DIContainer.scriptRepository must be set before accessing importPipelineService")
+        }
+        return ScriptImportPipelineService(
+            ocrService: ocrService,
+            parserService: scriptParserService,
+            thumbnailService: thumbnailService,
+            repository: repo
+        )
     }()
 
     private init() {}
